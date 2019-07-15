@@ -24,7 +24,7 @@ module NxtHttpClient
     end
 
     def register_callback(code, overwrite: false, &block)
-      key = CallbackKey.new(code)
+      key = code.to_s
       # This would add callbacks to the response handler
       unless overwrite
         callbacks[key].present? && raise_callback_already_registered(code)
@@ -41,7 +41,7 @@ module NxtHttpClient
     alias_method :on!, :register_callback!
 
     def callback_for_response(response)
-      key_from_response = CallbackKey.new(response.code)
+      key_from_response = response.code.to_s
 
       first_matching_key = callbacks.keys.sort.reverse.find do |key|
         regex_key = key.gsub('*', '[0-9]{1}')
@@ -49,8 +49,10 @@ module NxtHttpClient
       end
 
       first_matching_key && callbacks[first_matching_key] ||
-        !response.success? && callbacks['001'] ||
-        callbacks['000']
+      response.success? && callbacks['success'] ||
+      response.timed_out? && callbacks['timed_out'] ||
+      !response.success? && callbacks['error'] ||
+      callbacks['others']
     end
 
     private

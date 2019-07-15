@@ -62,7 +62,7 @@ RSpec.describe NxtHttpClient::Client do
           end
 
           handler.on(:error) do |response|
-            'Response not successful'
+            raise StandardError, 'Response not successful'
           end
         end
       end
