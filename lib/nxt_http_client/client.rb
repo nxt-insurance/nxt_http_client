@@ -14,6 +14,18 @@ module NxtHttpClient
     def fire(request, response_handler: dup_handler_from_class, &block)
       response_handler.configure(&block) if block_given?
 
+      if response_handler.callbacks['headers']
+        request.on_headers do |response|
+          response_handler.callbacks['headers'].call(response)
+        end
+      end
+
+      if response_handler.callbacks['body']
+        request.on_body do |response|
+          response_handler.callbacks['body'].call(response)
+        end
+      end
+
       request.on_complete do |response|
         response_handler.call(response)
       end

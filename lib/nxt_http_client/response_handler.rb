@@ -8,6 +8,7 @@ module NxtHttpClient
     end
 
     attr_accessor :result
+    attr_reader :callbacks
 
     def call(response)
       callback = callback_for_response(response)
@@ -69,7 +70,5 @@ module NxtHttpClient
       @callbacks = original.send(:callbacks).dup
       @result = nil
     end
-
-    attr_reader :callbacks
   end
 end
