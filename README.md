@@ -22,7 +22,27 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+class MyClient < NxtHttpClient
+  response_handler do |handler|
+    handler.on(:error) do |response|
+      raise StandardError, "I can't handle this: #{response.code}"
+    end
+  end
+  
+  def call
+    fire('www.google.com', method: :get) do |handler|
+      handler.on(:success) do |response|
+        response.body
+      end
+      
+      handler.on('404') do |response|
+        raise StandardError, '404'
+      end
+    end
+  end
+end
+```
 
 ## Development
 
