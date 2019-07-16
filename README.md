@@ -24,6 +24,7 @@ Or install it yourself as:
 
 ```ruby
 class MyClient < NxtHttpClient
+  # The handler on class level will be used as a template for all handlers used with fire
   response_handler do |handler|
     handler.on(:error) do |response|
       raise StandardError, "I can't handle this: #{response.code}"
@@ -31,6 +32,8 @@ class MyClient < NxtHttpClient
   end
   
   def call
+    # .fire will use the handler of the class as a template
+    # It's also possible to configure a blank handler by passing in response_handler: ResponseHandler.new 
     fire('www.google.com', method: :get) do |handler|
       handler.on(:success) do |response|
         response.body
