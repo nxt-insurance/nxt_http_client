@@ -16,23 +16,26 @@ module NxtHttpClient
 
       if response_handler.callbacks['headers']
         request.on_headers do |response|
-          response_handler.callbacks['headers'].call(response)
+          instance_exec(response, &response_handler.callbacks['headers'])
         end
       end
 
       if response_handler.callbacks['body']
         request.on_body do |response|
-          response_handler.callbacks['body'].call(response)
+          instance_exec(response, &response_handler.callbacks['body'])
         end
       end
 
+      result = nil
+
       request.on_complete do |response|
-        response_handler.call(response)
+        callback = response_handler.callback_for_response(response)
+        result = callback && instance_exec(response, &callback) || response
       end
 
       request.run
 
-      response_handler.result
+      result
     end
 
     def dup_handler_from_class

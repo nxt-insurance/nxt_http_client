@@ -54,25 +54,21 @@ RSpec.describe NxtHttpClient::Client do
   end
 
   context 'special callbacks' do
-    let(:client) do
-      Class.new(NxtHttpClient::Client) do
-        response_handler do |handler|
-          handler.on(:success) do |response|
-            response.body
-          end
-
-          handler.on(:error) do |response|
-            raise StandardError, 'Response not successful'
-          end
-        end
-      end
-    end
-
     subject do
       client.new
     end
 
     context ':success', :vcr_cassette do
+      let(:client) do
+        Class.new(NxtHttpClient::Client) do
+          response_handler do |handler|
+            handler.on(:success) do |response|
+              response.body
+            end
+          end
+        end
+      end
+
       let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
 
       it 'runs the success callback' do
@@ -81,10 +77,73 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     context ':error', :vcr_cassette do
+      let(:client) do
+        Class.new(NxtHttpClient::Client) do
+          response_handler do |handler|
+            handler.on(:error) do |response|
+              raise StandardError, 'Response not successful'
+            end
+          end
+        end
+      end
+
       let(:request) { ::Typhoeus::Request.new("www.f193a3d484c97517369fa15e6e586b44.com", method: :get) }
 
       it 'runs the error callback' do
         expect { subject.fire(request) }.to raise_error StandardError, /Response not successful/
+      end
+    end
+
+    context ':headers', :vcr_cassette do
+      let(:client) do
+        Class.new(NxtHttpClient::Client) do
+          def initialize
+            @headers = nil
+          end
+
+          attr_accessor :headers
+
+          response_handler do |handler|
+            handler.on(:headers) do |response|
+              self.headers = response.headers
+            end
+          end
+        end
+      end
+
+      let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
+
+      it 'runs the on headers callback' do
+        expect { subject.fire(request) }.to change { subject.headers }.from(nil)
+      end
+    end
+
+    context ':body', :vcr_cassette do
+      let(:client) do
+        Class.new(NxtHttpClient::Client) do
+          def initialize
+            @chunks = StringIO.new
+          end
+
+          attr_accessor :chunks
+
+          response_handler do |handler|
+            handler.on(:body) do |chunk|
+              chunks << 'body'
+            end
+
+            handler.on(:success) do |response|
+              chunks.rewind
+              chunks.read
+            end
+          end
+        end
+      end
+
+      let(:request) { http_stats_request(200) }
+
+      it 'runs the on body callback' do
+        expect(subject.fire(request)).to eq('body')
       end
     end
   end

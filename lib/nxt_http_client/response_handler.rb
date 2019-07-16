@@ -10,15 +10,15 @@ module NxtHttpClient
     attr_accessor :result
     attr_reader :callbacks
 
-    def call(response)
-      callback = callback_for_response(response)
-
-      if callback
-        self.result = callback.call(response)
-      else
-        self.result = response
-      end
-    end
+    # def call(response)
+    #   callback = callback_for_response(response)
+    #
+    #   if callback
+    #     self.result = callback.call(response)
+    #   else
+    #     self.result = response
+    #   end
+    # end
 
     def configure(&block)
       tap { |handler| block.call(handler) }
