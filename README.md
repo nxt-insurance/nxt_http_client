@@ -22,7 +22,7 @@ Or install it yourself as:
 
 ## Usage
 
-```
+```ruby
 class MyClient < NxtHttpClient
   response_handler do |handler|
     handler.on(:error) do |response|
