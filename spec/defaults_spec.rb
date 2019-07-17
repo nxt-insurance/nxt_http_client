@@ -3,7 +3,7 @@ RSpec.describe NxtHttpClient::Client do
   let(:level_one) do
     Class.new(described_class) do
       self.base_url = 'httpstat.us'
-      self.default_options = { method: :get }
+      self.default_request_options = { method: :get }
 
       response_handler do |handler|
         handler.on(200) do |response|
@@ -25,7 +25,7 @@ RSpec.describe NxtHttpClient::Client do
     level_one.new
   end
 
-  describe '.default_options' do
+  describe '.default_request_options' do
     it 'builds the request with the default options', :vcr_cassette do
       expect(subject.call('200')).to eq(method: :get)
     end

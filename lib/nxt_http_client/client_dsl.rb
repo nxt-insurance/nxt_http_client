@@ -7,13 +7,12 @@ module ClientDsl
     @base_url ||= ''
   end
 
-  # TODO: Rename to default_request_options
-  def default_options=(opts)
-    @default_options = opts
+  def default_request_options=(opts)
+    @default_request_options = opts
   end
 
-  def default_options
-    @default_options ||= {}
+  def default_request_options
+    @default_request_options ||= {}
   end
 
   # TODO: Make the class level interface uniform. Either with attr_accessor or using blocks
@@ -35,7 +34,7 @@ module ClientDsl
 
   def inherited(child)
     child.instance_variable_set(:@response_handler, @response_handler.dup)
-    child.instance_variable_set(:@default_options, @default_options.dup)
+    child.instance_variable_set(:@default_request_options, @default_request_options.dup)
     child.instance_variable_set(:@base_url, @base_url)
   end
 end

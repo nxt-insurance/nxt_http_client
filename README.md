@@ -27,7 +27,7 @@ class MyClient < NxtHttpClient
   # Configure the defaults for your client
   
   self.base_url = 'www.example.com/'
-  self.default_options = {
+  self.default_request_options = {
     headers: { API_KEY: '1993' },
     method: :get
   }
