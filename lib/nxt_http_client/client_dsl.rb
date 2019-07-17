@@ -6,6 +6,22 @@ module ClientDsl
     @defaults
   end
 
+  def before_fire(&block)
+    @before_fire_callback = block
+  end
+
+  def before_fire_callback
+    @before_fire_callback
+  end
+
+  def after_fire(&block)
+    @after_fire_callback = block
+  end
+
+  def after_fire_callback
+    @after_fire_callback
+  end
+
   def defaults
     @defaults
   end
@@ -38,6 +54,8 @@ module ClientDsl
     child.instance_variable_set(:@response_handler, @response_handler.dup)
     child.instance_variable_set(:@default_request_options, @default_request_options.dup)
     child.instance_variable_set(:@base_url, @base_url)
+    child.instance_variable_set(:@before_fire_callback, @before_fire_callback.dup)
+    child.instance_variable_set(:@after_fire_callback, @after_fire_callback.dup)
     child.instance_variable_set(:@defaults, OpenStruct.new(**@defaults.to_h.deep_dup))
   end
 end

@@ -41,6 +41,14 @@ class MyClient < NxtHttpClient
     end
   end
   
+  before_fire do |request|
+    # before 
+  end
+  
+  after_fire do |request, result, response|
+    # after 
+  end
+  
   def call
     # .fire will use the handler of the class as a template
     # It's also possible to configure a blank handler by passing in response_handler: ResponseHandler.new 

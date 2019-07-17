@@ -11,9 +11,13 @@ module NxtHttpClient
     end
 
     def fire(url = '', **opts, &block)
+      # calling_method = caller_locations(1,1)[0].label
       response_handler = opts.fetch(:response_handler) { dup_handler_from_class }
       response_handler.configure(&block) if block_given?
       request = build_request(url, opts.except(:response_handler))
+
+      before_fire_callback = self.class.before_fire_callback
+      before_fire_callback && instance_exec(request, &before_fire_callback)
 
       if response_handler.callbacks['headers']
         request.on_headers do |response|
@@ -32,6 +36,11 @@ module NxtHttpClient
       request.on_complete do |response|
         callback = response_handler.callback_for_response(response)
         result = callback && instance_exec(response, &callback) || response
+
+        after_fire_callback = self.class.after_fire_callback
+        after_fire_callback && instance_exec(request, result, response, &after_fire_callback)
+
+        result
       end
 
       request.run
