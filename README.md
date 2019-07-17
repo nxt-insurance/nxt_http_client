@@ -26,7 +26,7 @@ Or install it yourself as:
 class MyClient < NxtHttpClient
   # Configure the defaults for your client
   
-  self.base_url = 'www.example.com/'
+  self.base_url = 'www.example.com'
   self.default_request_options = {
     headers: { API_KEY: '1993' },
     method: :get,
@@ -43,7 +43,7 @@ class MyClient < NxtHttpClient
   def call
     # .fire will use the handler of the class as a template
     # It's also possible to configure a blank handler by passing in response_handler: ResponseHandler.new 
-    fire('/details', method: :get) do |handler|
+    fire('details', method: :get) do |handler|
       handler.on(:success) do |response|
         response.body
       end
