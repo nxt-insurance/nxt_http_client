@@ -16,13 +16,13 @@ module NxtHttpClient
 
       if response_handler.callbacks['headers']
         request.on_headers do |response|
-          instance_exec(response, &response_handler.callbacks['headers'])
+          response_handler.eval_callback(self, 'headers', response)
         end
       end
 
       if response_handler.callbacks['body']
         request.on_body do |response|
-          instance_exec(response, &response_handler.callbacks['body'])
+          response_handler.eval_callback(self, 'body', response)
         end
       end
 
