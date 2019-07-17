@@ -1,10 +1,10 @@
-require 'securerandom'
-
 RSpec.describe NxtHttpClient::Client do
   context 'when the callback is a status code', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        self.default_request_options = { followlocation: true }
+        register_defaults do |config|
+          config.request_options = { followlocation: true }
+        end
 
         register_response_handler do |handler|
           handler.on(200) do |response|

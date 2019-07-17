@@ -1,25 +1,21 @@
 module ClientDsl
 
-  # TODO: Could also be something like:
-  # register_defaults do |config|
-  #   config.base_url = 'www.example.com'
-  #   config.request_options = { ... }
-  # end
+  def register_defaults(defaults = OpenStruct.new, &block)
+    @defaults = defaults
+    @defaults.tap { |d| block.call(d) }
+    @defaults
+  end
 
-  def base_url=(base_url)
-    @base_url = base_url
+  def defaults
+    @defaults
   end
 
   def base_url
-    @base_url ||= ''
-  end
-
-  def default_request_options=(opts)
-    @default_request_options = opts
+    @base_url ||= (@defaults.base_url || '')
   end
 
   def default_request_options
-    @default_request_options ||= {}
+    @default_request_options ||= (defaults.request_options || {})
   end
 
   def register_response_handler(handler = nil, &block)
@@ -42,5 +38,6 @@ module ClientDsl
     child.instance_variable_set(:@response_handler, @response_handler.dup)
     child.instance_variable_set(:@default_request_options, @default_request_options.dup)
     child.instance_variable_set(:@base_url, @base_url)
+    child.instance_variable_set(:@defaults, OpenStruct.new(**@defaults.to_h.deep_dup))
   end
 end

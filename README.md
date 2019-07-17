@@ -25,14 +25,15 @@ Or install it yourself as:
 ```ruby
 class MyClient < NxtHttpClient
   # Configure the defaults for your client
+  register_defaults do |defaults|
+    defaults.base_url = 'www.example.com'
+    defaults.request_options = {
+      headers: { API_KEY: '1993' },
+      method: :get,
+      followlocation: true
+    }
+  end
   
-  self.base_url = 'www.example.com'
-  self.default_request_options = {
-    headers: { API_KEY: '1993' },
-    method: :get,
-    followlocation: true
-  }
-
   # The handler on class level will be used as a template for all handlers used with fire
   register_response_handler do |handler|
     handler.on(:error) do |response|
@@ -48,8 +49,13 @@ class MyClient < NxtHttpClient
         response.body
       end
       
-      handler.on('404') do |response|
+      handler.on(404) do |response|
         raise StandardError, '404'
+      end
+      
+      # You can also fuzzy match response codes using the wildcard *
+      handler.on('5**') do |response|
+        raise StandardError, 'This is bad'
       end
     end
   end
