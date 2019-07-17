@@ -16,7 +16,7 @@ module ClientDsl
     @default_options ||= {}
   end
 
-  # or create a blank one.
+  # TODO: Make the class level interface uniform. Either with attr_accessor or using blocks
   def response_handler(handler = nil, &block)
     @response_handler = handler if handler
 
