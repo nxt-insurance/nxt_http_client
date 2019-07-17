@@ -1,4 +1,11 @@
 module ClientDsl
+
+  # TODO: Could also be something like:
+  # register_defaults do |config|
+  #   config.base_url = 'www.example.com'
+  #   config.request_options = { ... }
+  # end
+
   def base_url=(base_url)
     @base_url = base_url
   end
