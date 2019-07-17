@@ -5,7 +5,7 @@ module NxtHttpClient
 
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || self.class.base_url
-      url = [base_url, url].join('/')
+      url = [base_url, url].join('/').gsub('//', '/')
       opts = self.class.default_options.deep_merge(opts)
 
       Typhoeus::Request.new(url, opts)
