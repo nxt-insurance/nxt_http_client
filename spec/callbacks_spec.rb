@@ -2,10 +2,10 @@ require 'securerandom'
 
 RSpec.describe NxtHttpClient::Client do
   context 'when the callback is a status code', :vcr_cassette do
-    let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
-
     let(:client) do
       Class.new(NxtHttpClient::Client) do
+        self.default_request_options = { followlocation: true }
+
         register_response_handler do |handler|
           handler.on(200) do |response|
             response.body
@@ -19,25 +19,23 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     it 'runs the correct callback' do
-      expect(subject.fire(request)).to include('Google')
+      expect(subject.fire('www.example.com')).to include('Example Domain')
     end
   end
 
-  context 'when the callback is fuzzy', :vcr_cassette do
-    let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
-
+  context 'when the callback is overwritten in the instance', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
         register_response_handler do |handler|
           handler.on(200) do |response|
-            response.body
+            raise StandardError, 'This should not happen!'
           end
         end
 
-        def call(request)
-          fire(request) do |handler|
+        def call
+          fire('www.example.com') do |handler|
             handler.on!(200) do |response|
-              response.body.length
+              response.body
             end
           end
         end
@@ -49,7 +47,7 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     it 'runs the correct callback' do
-      expect(subject.call(request)).to eq(11299)
+      expect(subject.call).to include('Example Domain')
     end
   end
 
@@ -69,10 +67,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
-
       it 'runs the success callback' do
-        expect(subject.fire(request)).to include('Google')
+        expect(subject.fire('www.example.com')).to include('Example Domain')
       end
     end
 
@@ -87,10 +83,10 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      let(:request) { ::Typhoeus::Request.new("www.f193a3d484c97517369fa15e6e586b44.com", method: :get) }
-
       it 'runs the error callback' do
-        expect { subject.fire(request) }.to raise_error StandardError, /Response not successful/
+        expect {
+          subject.fire('www.f193a3d484c97517369fa15e6e586b44.com')
+        }.to raise_error StandardError, /Response not successful/
       end
     end
 
@@ -111,10 +107,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      let(:request) { ::Typhoeus::Request.new("www.google.com", method: :get) }
-
       it 'runs the on headers callback' do
-        expect { subject.fire(request) }.to change { subject.headers }.from(nil)
+        expect { subject.fire('www.example.com') }.to change { subject.headers }.from(nil)
       end
     end
 
@@ -140,10 +134,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      let(:request) { http_stats_request(200) }
-
       it 'runs the on body callback' do
-        expect(subject.fire(request)).to eq('body')
+        expect(subject.fire(http_stats_url('200'))).to eq('body')
       end
     end
   end

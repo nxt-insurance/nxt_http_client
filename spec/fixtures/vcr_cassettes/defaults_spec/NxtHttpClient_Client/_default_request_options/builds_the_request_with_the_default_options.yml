@@ -35,10 +35,10 @@ http_interactions:
       Set-Cookie:
       - ARRAffinity=0285cfbea9f2ee78f69010c84850bd5b73ee05f1ff7f634b0b6b20c1291ca357;Path=/;HttpOnly;Domain=httpstat.us
       Date:
-      - Wed, 17 Jul 2019 08:00:04 GMT
+      - Wed, 17 Jul 2019 09:52:54 GMT
     body:
       encoding: UTF-8
       string: 200 OK
     http_version: 
-  recorded_at: Wed, 17 Jul 2019 07:59:34 GMT
+  recorded_at: Wed, 17 Jul 2019 09:52:24 GMT
 recorded_with: VCR 5.0.0

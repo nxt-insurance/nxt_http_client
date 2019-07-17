@@ -16,7 +16,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       def call(status)
-        fire(build_request(status))
+        fire(status)
       end
     end
   end

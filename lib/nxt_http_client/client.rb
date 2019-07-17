@@ -4,14 +4,16 @@ module NxtHttpClient
 
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || self.class.base_url
-      url = [base_url, url].join('/').gsub('//', '/')
+      url = [base_url, url].reject(&:blank?).join('/')
       opts = self.class.default_request_options.deep_merge(opts)
 
       Typhoeus::Request.new(url, opts)
     end
 
-    def fire(request, response_handler: dup_handler_from_class, &block)
+    def fire(url = '', **opts, &block)
+      response_handler = opts.fetch(:response_handler) { dup_handler_from_class }
       response_handler.configure(&block) if block_given?
+      request = build_request(url, opts.except(:response_handler))
 
       if response_handler.callbacks['headers']
         request.on_headers do |response|
