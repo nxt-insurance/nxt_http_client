@@ -29,11 +29,12 @@ class MyClient < NxtHttpClient
   self.base_url = 'www.example.com/'
   self.default_request_options = {
     headers: { API_KEY: '1993' },
-    method: :get
+    method: :get,
+    followlocation: true
   }
 
   # The handler on class level will be used as a template for all handlers used with fire
-  response_handler do |handler|
+  register_response_handler do |handler|
     handler.on(:error) do |response|
       raise StandardError, "I can't handle this: #{response.code}"
     end
