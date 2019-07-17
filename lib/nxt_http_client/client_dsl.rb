@@ -7,6 +7,7 @@ module ClientDsl
     @base_url ||= ''
   end
 
+  # TODO: Rename to default_request_options
   def default_options=(opts)
     @default_options = opts
   end
