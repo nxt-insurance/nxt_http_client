@@ -1,6 +1,5 @@
 module NxtHttpClient
   class Client
-    # Probably want to move out the DSL
     extend ClientDsl
 
     def build_request(url, **opts)
