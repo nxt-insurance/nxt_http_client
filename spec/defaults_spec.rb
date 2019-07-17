@@ -5,7 +5,7 @@ RSpec.describe NxtHttpClient::Client do
       self.base_url = 'httpstat.us'
       self.default_request_options = { method: :get }
 
-      response_handler do |handler|
+      register_response_handler do |handler|
         handler.on(200) do |response|
           response.request.original_options
         end

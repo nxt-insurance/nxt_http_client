@@ -6,7 +6,7 @@ RSpec.describe NxtHttpClient::Client do
 
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        response_handler do |handler|
+        register_response_handler do |handler|
           handler.on(200) do |response|
             response.body
           end
@@ -28,7 +28,7 @@ RSpec.describe NxtHttpClient::Client do
 
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        response_handler do |handler|
+        register_response_handler do |handler|
           handler.on(200) do |response|
             response.body
           end
@@ -61,7 +61,7 @@ RSpec.describe NxtHttpClient::Client do
     context ':success', :vcr_cassette do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
-          response_handler do |handler|
+          register_response_handler do |handler|
             handler.on(:success) do |response|
               response.body
             end
@@ -79,7 +79,7 @@ RSpec.describe NxtHttpClient::Client do
     context ':error', :vcr_cassette do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
-          response_handler do |handler|
+          register_response_handler do |handler|
             handler.on(:error) do |response|
               raise StandardError, 'Response not successful'
             end
@@ -103,7 +103,7 @@ RSpec.describe NxtHttpClient::Client do
 
           attr_accessor :headers
 
-          response_handler do |handler|
+          register_response_handler do |handler|
             handler.on(:headers) do |response|
               self.headers = response.headers
             end
@@ -127,7 +127,7 @@ RSpec.describe NxtHttpClient::Client do
 
           attr_accessor :chunks
 
-          response_handler do |handler|
+          register_response_handler do |handler|
             handler.on(:body) do |chunk|
               chunks << 'body'
             end

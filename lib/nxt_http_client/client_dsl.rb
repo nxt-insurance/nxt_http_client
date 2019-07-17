@@ -15,16 +15,15 @@ module ClientDsl
     @default_request_options ||= {}
   end
 
-  # TODO: Make the class level interface uniform. Either with attr_accessor or using blocks
-  def response_handler(handler = nil, &block)
-    @response_handler = handler if handler
+  def register_response_handler(handler = nil, &block)
+    @response_handler = handler
+    @response_handler ||= dup_handler_from_ancestor_or_new
+    @response_handler.configure(&block) if block_given?
+    @response_handler
+  end
 
-    if block_given?
-      @response_handler ||= dup_handler_from_ancestor_or_new
-      @response_handler.configure(&block)
-    else
-      @response_handler
-    end
+  def response_handler
+    @response_handler
   end
 
   def dup_handler_from_ancestor_or_new

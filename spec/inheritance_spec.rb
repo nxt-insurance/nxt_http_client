@@ -1,7 +1,7 @@
 RSpec.describe NxtHttpClient::Client do
   let(:level_one) do
     Class.new(described_class) do
-      response_handler do |handler|
+      register_response_handler do |handler|
         handler.on(200) do |response|
           '200 from level one class level'
         end
@@ -15,7 +15,7 @@ RSpec.describe NxtHttpClient::Client do
 
   let(:level_two) do
     Class.new(level_one) do
-      response_handler do |handler|
+      register_response_handler do |handler|
         handler.on(201) do |response|
           '201 from level one class level'
         end
@@ -65,7 +65,7 @@ RSpec.describe NxtHttpClient::Client do
 
   let(:level_four) do
     Class.new(level_three) do
-      response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
+      register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
         handler.on(200) do |response|
           '200 from level four class level'
         end
