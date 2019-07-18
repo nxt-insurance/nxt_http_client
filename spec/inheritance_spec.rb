@@ -1,6 +1,12 @@
 RSpec.describe NxtHttpClient::Client do
   let(:level_one) do
     Class.new(described_class) do
+      def initialize
+        @log = []
+      end
+
+      attr_accessor :log
+
       register_defaults do |defaults|
         defaults.base_url = 'httpstat.us'
       end
@@ -13,6 +19,14 @@ RSpec.describe NxtHttpClient::Client do
         handler.on(404) do |response|
           '404 from level one class level'
         end
+      end
+
+      before_fire do |request|
+        log << { level_one: request.url }
+      end
+
+      after_fire do |request, result, response|
+        log << { level_one: response.code }
       end
     end
   end
@@ -64,6 +78,14 @@ RSpec.describe NxtHttpClient::Client do
           end
         end
       end
+
+      before_fire do |request|
+        log << { level_three: request.url }
+      end
+
+      after_fire do |request, result, response|
+        log << { level_three: response.code }
+      end
     end
   end
 
@@ -114,6 +136,32 @@ RSpec.describe NxtHttpClient::Client do
   context 'resetting the response handler on class level', :vcr_cassette do
     it 'does not inherit callbacks from the super class' do
       expect(level_four.new.fire(http_stats_url('404'))).to eq('4** from level four class level')
+    end
+  end
+
+  describe '#before_fire' do
+    let(:level_two_client) { level_two.new }
+    let(:level_three_client) { level_three.new }
+
+    it 'calls the correct callback', :vcr_cassette do
+      expect { level_two_client.call('401') }.to change { level_two_client.log }
+      expect(level_two_client.log.first).to eq(level_one: "httpstat.us/401")
+
+      expect { level_three_client.call('200') }.to change { level_three_client.log }
+      expect(level_three_client.log.first).to eq(level_three: "httpstat.us/200")
+    end
+  end
+
+  describe '#after_fire' do
+    let(:level_two_client) { level_two.new }
+    let(:level_three_client) { level_three.new }
+
+    it 'calls the correct callback', :vcr_cassette do
+      expect { level_two_client.call('401') }.to change { level_two_client.log }
+      expect(level_two_client.log.last).to eq(level_one: 401)
+
+      expect { level_three_client.fresh_call('200') }.to change { level_three_client.log }
+      expect(level_three_client.log.last).to eq(level_three: 200)
     end
   end
 end
