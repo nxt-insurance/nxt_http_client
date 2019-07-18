@@ -41,6 +41,10 @@ class MyClient < NxtHttpClient
     end
   end
   
+  # Hook into before and after fire to do something around your request response cycle.
+  # Note: These callbacks are inherited down the chain but not being stacked. Meaning 
+  # when you overwrite it in your subclass the one of the parent class not be called in the subclass.
+  
   before_fire do |request|
     # Will be called before fire  
   end
