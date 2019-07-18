@@ -42,11 +42,11 @@ class MyClient < NxtHttpClient
   end
   
   before_fire do |request|
-    # before 
+    # Will be called before fire  
   end
   
   after_fire do |request, result, response|
-    # after 
+    # Will be called after fire 
   end
   
   def call
