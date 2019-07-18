@@ -38,6 +38,7 @@ module NxtHttpClient
 
     def callback_for_response(response)
       key_from_response = response.code.to_s
+      return callbacks['any'] if callbacks['any'].present?
 
       first_matching_key = callbacks.keys.sort.reverse.find do |key|
         regex_key = key.gsub('*', '[0-9]{1}')

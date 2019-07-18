@@ -25,7 +25,7 @@ Or install it yourself as:
 
 ```ruby
 class MyClient < NxtHttpClient
-  # Configure the defaults for your client
+  
   register_defaults do |defaults|
     defaults.base_url = 'www.example.com'
     defaults.request_options = {
@@ -35,16 +35,11 @@ class MyClient < NxtHttpClient
     }
   end
   
-  # The handler on class level will be used as a template for all handlers used with fire
   register_response_handler do |handler|
     handler.on(:error) do |response|
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
-  
-  # Hook into before and after fire to do something around your request response cycle.
-  # Note: These callbacks are inherited down the chain but not being stacked. Meaning 
-  # when you overwrite it in your subclass the one of the parent class not be called in the subclass.
   
   before_fire do |request|
     # Will be called before fire  
@@ -54,9 +49,7 @@ class MyClient < NxtHttpClient
     # Will be called after fire 
   end
   
-  def call
-    # #fire will use the handler of the class as a template
-    # It's also possible to configure a blank handler by passing in response_handler: ResponseHandler.new 
+  def call 
     fire('details', method: :get) do |handler|
       handler.on(:success) do |response|
         response.body
@@ -74,6 +67,62 @@ class MyClient < NxtHttpClient
   end
 end
 ```
+
+### register_defaults
+
+Register default request options on the class level.
+
+### register_response_handler
+
+Register a default response handler for your client class. 
+You can reconfigure or overwrite it this completely later on the instance level. 
+
+### fire
+
+Use `fire('uri', **request_options)` to actually fire your requests and define what to do with the response by using
+the NxtHttpClient DSL. Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first 
+and more common callbacks will come later in case none of the specific callbacks matched. It this is not what you want you
+can simply put the logic you need into one common callback that is called in any case. You can also use strings with wildcards
+to match a group of response by status code. `handler.on('4**') { ... }` basically would match all client errors.   
+
+```ruby
+fire('uri', **request_options) do |handler|
+  handler.on(:any) do |response|
+    raise StandardError, 'This would overwrite all others since it matches first'
+  end
+
+  handler.on(:success) do |response|
+    response.body
+  end
+  
+  handler.on(:timed_out) do |response|
+    raise StandardError, 'Timeout'
+  end
+  
+  handler.on(:error) do |response|
+    raise StandardError, 'This is bad'
+  end
+  
+  handler.on(:others) do |response|
+    raise StandardError, 'Other problem'
+  end
+  
+  handler.on(:headers) do |response|
+    # This is already executed when the headers are received
+  end
+  
+  handler.on(:body) do |chunk|
+   # Use this to stream the body in chunks 
+  end
+end
+``` 
+
+### Callbacks around fire
+
+You can also hook into the before_fire and after_fire callbacks to do something before and after the actual request is executed.
+These callbacks are inherited down the class hierarchy but are not being chained. Meaning when you overwrite those in your subclass,
+the callbacks defined by your parent class will not be called anymore.
+
 
 ## Development
 
