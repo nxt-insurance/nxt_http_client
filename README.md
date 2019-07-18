@@ -49,7 +49,7 @@ class MyClient < NxtHttpClient
     # Will be called after fire 
   end
   
-  def call 
+  def fetch_details
     fire('details', method: :get) do |handler|
       handler.on(:success) do |response|
         response.body
