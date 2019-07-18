@@ -38,7 +38,7 @@ module NxtHttpClient
         result = callback && instance_exec(response, &callback) || response
 
         after_fire_callback = self.class.after_fire_callback
-        after_fire_callback && instance_exec(request, result, response, &after_fire_callback)
+        after_fire_callback && instance_exec(request, response, result, &after_fire_callback)
 
         result
       end

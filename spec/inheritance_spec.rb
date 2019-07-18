@@ -25,7 +25,7 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_one: request.url }
       end
 
-      after_fire do |request, result, response|
+      after_fire do |request, response, result|
         log << { level_one: response.code }
       end
     end
@@ -83,7 +83,7 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_three: request.url }
       end
 
-      after_fire do |request, result, response|
+      after_fire do |request, response, result|
         log << { level_three: response.code }
       end
     end
