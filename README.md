@@ -1,8 +1,9 @@
 # NxtHttpClient
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/nxt_http_client`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Build http clients with ease. NxtHttpClient is a simple DSL on top of the typhoeus gem.
+The idea is that you can configure a client on the class level and then adjust or further configure
+request options on an instance level. All http interactions are handled by typhoeus. If you need to 
+access the original `Typhoeus::Request` in your instance, you can do that. 
 
 ## Installation
 
@@ -54,7 +55,7 @@ class MyClient < NxtHttpClient
   end
   
   def call
-    # .fire will use the handler of the class as a template
+    # #fire will use the handler of the class as a template
     # It's also possible to configure a blank handler by passing in response_handler: ResponseHandler.new 
     fire('details', method: :get) do |handler|
       handler.on(:success) do |response|

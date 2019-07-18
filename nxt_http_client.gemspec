@@ -6,22 +6,21 @@ require "nxt_http_client/version"
 Gem::Specification.new do |spec|
   spec.name          = "nxt_http_client"
   spec.version       = NxtHttpClient::VERSION
-  spec.authors       = ["Andreas Robecke"]
+  spec.authors       = ["Andreas Robecke", "Nils Sommer", "Raphael Kallensee", "Luetfi Demirci"]
   spec.email         = ["a.robecke@getsafe.de"]
 
-  spec.summary       = %q{Simple DSL on top of typhoeus client}
-  spec.description   = %q{Write a longer description or delete this line.}
-  spec.homepage      = "https://www.getsafe.de"
+  spec.summary       = %q{NxtHttpClinet is a simple DSL on top the typhoeus http gem}
+  spec.description   = %q{NxtHttpClinet allows you to easily create and configure http clients.}
+  spec.homepage      = "https://github.com/nxt-insurance"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata["allowed_push_host"] = "www.robecke.de"
+    spec.metadata["allowed_push_host"] = "www.rubygems.org"
 
     spec.metadata["homepage_uri"] = spec.homepage
-    spec.metadata["source_code_uri"] = "https://www.github.com"
-    spec.metadata["changelog_uri"] = "https://www.github.com"
+    spec.metadata["source_code_uri"] = "https://github.com/nxt-insurance/nxt_http_client"
   else
     raise "RubyGems 2.0 or newer is required to protect against " \
       "public gem pushes."
@@ -36,8 +35,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'nxt_init'
-  spec.add_dependency 'config'
   spec.add_dependency 'typhoeus'
   spec.add_dependency 'activesupport', '~> 5.2'
 
