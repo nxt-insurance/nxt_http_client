@@ -12,7 +12,10 @@ module NxtHttpClient
 
     def fire(url = '', **opts, &block)
       # calling_method = caller_locations(1,1)[0].label
-      response_handler = opts.fetch(:response_handler) { dup_handler_from_class }
+      response_handler = opts.fetch(:response_handler) do
+        dup_handler_from_class || NxtHttpClient::ResponseHandler.new
+      end
+
       response_handler.configure(&block) if block_given?
       request = build_request(url, opts.except(:response_handler))
 
