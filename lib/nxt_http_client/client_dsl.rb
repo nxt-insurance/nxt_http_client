@@ -23,11 +23,11 @@ module ClientDsl
   end
 
   def defaults
-    @defaults
+    @defaults ||= OpenStruct.new
   end
 
   def base_url
-    @base_url ||= (@defaults.base_url || '')
+    @base_url ||= (defaults.base_url || '')
   end
 
   def default_request_options

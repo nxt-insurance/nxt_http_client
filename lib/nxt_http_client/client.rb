@@ -51,6 +51,12 @@ module NxtHttpClient
       result
     end
 
+    %w[get post patch put].each do |method|
+      define_method method do |url = '', **opts, &block|
+        fire(url, opts.reverse_merge(method: method, &block))
+      end
+    end
+
     def dup_handler_from_class
       self.class.response_handler.dup
     end
