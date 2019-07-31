@@ -9,6 +9,9 @@ RSpec.describe NxtHttpClient::Client do
 
       register_defaults do |defaults|
         defaults.base_url = 'httpstat.us'
+        defaults.request_options = {
+          headers: { Accept: "text/html", Token: 'my custom token' }
+        }
       end
 
       register_response_handler do |handler|
@@ -93,6 +96,7 @@ RSpec.describe NxtHttpClient::Client do
     Class.new(level_three) do
       register_defaults do |defaults|
         defaults.base_url = nil
+        defaults.request_options.deep_merge(headers: { Token: 'deep merge' })
       end
 
       register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
@@ -104,6 +108,18 @@ RSpec.describe NxtHttpClient::Client do
           '4** from level four class level'
         end
       end
+    end
+  end
+
+  context 'headers' do
+    let(:level_four_client) { level_four.new }
+
+    let(:headers) { { Accept: 'text/html', Token: 'my custom token' } }
+
+    it 'deep merges headers from super classes', :vcr_cassette do
+      expect(level_four_client.class.defaults.request_options).to eq(headers: headers)
+      result = level_four_client.put(http_stats_url('503'))
+      expect(result.request.original_options[:headers]).to eq(headers)
     end
   end
 

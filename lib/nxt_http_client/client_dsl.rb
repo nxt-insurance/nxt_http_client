@@ -1,7 +1,7 @@
 module ClientDsl
 
-  def register_defaults(defaults = OpenStruct.new, &block)
-    @defaults = defaults
+  def register_defaults(opts = defaults, &block)
+    @defaults = opts
     @defaults.tap { |d| block.call(d) }
     @defaults
   end
@@ -52,7 +52,6 @@ module ClientDsl
 
   def inherited(child)
     child.instance_variable_set(:@response_handler, @response_handler.dup)
-    child.instance_variable_set(:@default_request_options, @default_request_options.deep_dup)
     child.instance_variable_set(:@base_url, @base_url)
     child.instance_variable_set(:@before_fire_callback, @before_fire_callback.dup)
     child.instance_variable_set(:@after_fire_callback, @after_fire_callback.dup)
