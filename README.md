@@ -33,6 +33,7 @@ class MyClient < NxtHttpClient
       method: :get,
       followlocation: true
     }
+    defaults.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } # defaults to -> { SecureRandom.uuid } 
   end
   
   register_response_handler do |handler|
@@ -41,8 +42,11 @@ class MyClient < NxtHttpClient
     end
   end
   
-  before_fire do |request|
-    # Will be called before fire  
+  before_fire do |request, handler|
+    # Will be called before fire
+    handler.on!(200) do |response|
+      # reconfigure your handler before fire
+    end
   end
   
   after_fire do |request, result, response|
@@ -70,7 +74,8 @@ end
 
 ### register_defaults
 
-Register default request options on the class level.
+Register default request options on the class level. Available options are `request_options` that are passed directly to 
+the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`. 
 
 ### register_response_handler
 
