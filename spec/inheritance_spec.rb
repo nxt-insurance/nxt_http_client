@@ -82,7 +82,7 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      before_fire do |request|
+      before_fire do |request, response_handler|
         log << { level_three: request.url }
       end
 

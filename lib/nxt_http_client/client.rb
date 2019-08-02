@@ -37,7 +37,7 @@ module NxtHttpClient
       request = build_request(url, opts.except(:response_handler))
 
       before_fire_callback = self.class.before_fire_callback
-      before_fire_callback && instance_exec(request, &before_fire_callback)
+      before_fire_callback && instance_exec(request, response_handler, &before_fire_callback)
 
       if response_handler.callbacks['headers']
         request.on_headers do |response|
