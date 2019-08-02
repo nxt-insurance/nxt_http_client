@@ -1,7 +1,13 @@
 module NxtHttpClient
   class Client
     extend ClientDsl
+    extend ConfigX
+
     CACHE_STRATEGIES = %w[global thread]
+
+    configurable :class do
+      attr :x_request_id
+    end
 
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || self.class.base_url

@@ -3,6 +3,7 @@ PATH
   specs:
     nxt_http_client (0.1.7)
       activesupport (~> 5.2)
+      config_x
       typhoeus
 
 GEM
@@ -17,6 +18,7 @@ GEM
       public_suffix (>= 2.0.2, < 4.0)
     coderay (1.1.2)
     concurrent-ruby (1.1.5)
+    config_x (0.1.1)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     diff-lcs (1.3)
