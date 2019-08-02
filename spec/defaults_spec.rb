@@ -9,7 +9,7 @@ RSpec.describe NxtHttpClient::Client do
 
       register_response_handler do |handler|
         handler.on(200) do |response|
-          response.request.original_options
+          response.request.original_options.symbolize_keys
         end
 
         handler.on('400') do |response|
@@ -29,7 +29,7 @@ RSpec.describe NxtHttpClient::Client do
 
   describe '.default_request_options' do
     it 'builds the request with the default options', :vcr_cassette do
-      expect(subject.call('200')).to eq(method: :get)
+      expect(subject.call('200')).to eq(method: :get, cache: false, headers: {})
     end
   end
 

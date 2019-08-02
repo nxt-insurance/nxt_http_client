@@ -3,11 +3,16 @@ require 'vcr'
 require 'nxt_vcr_harness'
 require 'nxt_http_client'
 require 'pry'
+require 'redis'
+require 'typhoeus/cache/redis'
 
 require 'webmock/rspec'
 WebMock.disable_net_connect!(allow_localhost: true)
 
 Dir['spec/support/**/*.rb'].each { |f| require "./#{f}" }
+
+redis = Redis.new(db: 5)
+::Typhoeus::Config.cache = ::Typhoeus::Cache::Redis.new(redis, default_ttl: 60)
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

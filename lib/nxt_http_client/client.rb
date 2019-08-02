@@ -5,7 +5,15 @@ module NxtHttpClient
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || self.class.base_url
       url = [base_url, url].reject(&:blank?).join('/').gsub(/([^https?:]\/\/)/, '/')
-      opts = self.class.default_request_options.deep_merge(opts)
+
+      opts = self.class.default_request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
+      opts[:headers] ||= {}
+
+      if opts[:cache] ||= false
+        opts.delete(:cache)
+        cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
+        opts[:headers].reverse_merge!(cache_key: cache_key)
+      end
 
       Typhoeus::Request.new(url, opts)
     end

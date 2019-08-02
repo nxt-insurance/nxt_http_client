@@ -31,7 +31,7 @@ module ClientDsl
   end
 
   def default_request_options
-    @default_request_options ||= (defaults.request_options || {})
+    @default_request_options ||= (defaults.request_options || ActiveSupport::HashWithIndifferentAccess.new)
   end
 
   def register_response_handler(handler = nil, &block)
