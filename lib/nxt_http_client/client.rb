@@ -70,7 +70,7 @@ module NxtHttpClient
 
     %w[get post patch put delete head].each do |method|
       define_method method do |url = '', **opts, &block|
-        fire(url, opts.reverse_merge(method: method, &block))
+        fire(url, opts.reverse_merge(method: method), &block)
       end
     end
 
