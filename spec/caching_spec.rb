@@ -23,6 +23,7 @@ RSpec.describe NxtHttpClient::Client do
 
         configure do |config|
           config.request_options = { cache: :thread }
+          config.x_request_id_proc = -> { Thread.current.object_id }
         end
       end
     end
@@ -44,6 +45,10 @@ RSpec.describe NxtHttpClient::Client do
           handler.on(200) do |response|
             response
           end
+        end
+
+        configure do |config|
+          config.x_request_id_proc = -> { Thread.current.object_id }
         end
       end
     end

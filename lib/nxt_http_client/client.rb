@@ -10,6 +10,10 @@ module NxtHttpClient
       opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
 
+      if default_config.x_request_id_proc
+        opts[:headers]['X-Request-ID'] ||= default_config.x_request_id_proc.call
+      end
+
       if opts[:cache] ||= false
         strategy = opts.delete(:cache)
 

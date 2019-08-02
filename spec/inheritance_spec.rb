@@ -97,6 +97,7 @@ RSpec.describe NxtHttpClient::Client do
       configure do |config|
         config.base_url = nil
         config.request_options.deep_merge(headers: { Token: 'deep merge' })
+        config.x_request_id_proc = -> { 'my id' }
       end
 
       register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
@@ -114,11 +115,18 @@ RSpec.describe NxtHttpClient::Client do
   context 'headers' do
     let(:level_four_client) { level_four.new }
 
-    let(:headers) { { headers: { Accept: 'text/html', Token: 'my custom token' } }.with_indifferent_access }
+    let(:expected_request_options) { { Accept: 'text/html', Token: 'my custom token' }.with_indifferent_access }
+    let(:headers) { { headers: expected_request_options.merge('X-Request-ID': 'my id') }.with_indifferent_access }
 
     it 'deep merges headers from super classes', :vcr_cassette do
-      expect(level_four_client.class.default_config.request_options.with_indifferent_access).to eq(headers)
+      expect(
+        level_four_client.class.default_config.request_options.with_indifferent_access
+      ).to eq(
+        'headers' => expected_request_options
+      )
+
       result = level_four_client.put(http_stats_url('503'))
+
       expect(result.request.original_options[:headers]).to eq(headers[:headers])
     end
   end

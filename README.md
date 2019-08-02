@@ -36,7 +36,9 @@ class MyClient < NxtHttpClient
       method: :get,
       followlocation: true
     )
-    config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } # config to -> { SecureRandom.uuid } 
+    # Be aware that the result of x_request_id_proc will be hashed into the cache key and thus might cause 
+    # your request not to be cached if not used properly 
+    config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
   register_response_handler do |handler|

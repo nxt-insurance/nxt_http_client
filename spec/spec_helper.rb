@@ -11,8 +11,8 @@ WebMock.disable_net_connect!(allow_localhost: true)
 
 Dir['spec/support/**/*.rb'].each { |f| require "./#{f}" }
 
-redis = Redis.new(db: 5)
-::Typhoeus::Config.cache = ::Typhoeus::Cache::Redis.new(redis, default_ttl: 60)
+NxtHttpClient::REDIS_TEST_DB = Redis.new(db: 5)
+::Typhoeus::Config.cache = ::Typhoeus::Cache::Redis.new(NxtHttpClient::REDIS_TEST_DB, default_ttl: 60)
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

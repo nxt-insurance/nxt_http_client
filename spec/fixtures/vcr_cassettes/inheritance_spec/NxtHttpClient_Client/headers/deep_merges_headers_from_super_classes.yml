@@ -13,6 +13,8 @@ http_interactions:
       - text/html
       Token:
       - my custom token
+      X-Request-Id:
+      - my id
       Expect:
       - ''
   response:
@@ -39,10 +41,10 @@ http_interactions:
       Set-Cookie:
       - ARRAffinity=0285cfbea9f2ee78f69010c84850bd5b73ee05f1ff7f634b0b6b20c1291ca357;Path=/;HttpOnly;Domain=httpstat.us
       Date:
-      - Wed, 31 Jul 2019 07:44:30 GMT
+      - Fri, 02 Aug 2019 21:44:51 GMT
     body:
       encoding: UTF-8
       string: 503 Service Unavailable
     http_version: 
-  recorded_at: Wed, 31 Jul 2019 07:43:40 GMT
+  recorded_at: Fri, 02 Aug 2019 21:43:27 GMT
 recorded_with: VCR 5.0.0
