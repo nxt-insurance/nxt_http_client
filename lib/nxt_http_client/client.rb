@@ -22,10 +22,9 @@ module NxtHttpClient
         else
           raise ArgumentError, "Cache strategy unknown: #{strategy}. Options are #{CACHE_STRATEGIES}"
         end
-
       end
 
-      Typhoeus::Request.new(url, opts)
+      Typhoeus::Request.new(url, **opts.symbolize_keys)
     end
 
     def fire(url = '', **opts, &block)

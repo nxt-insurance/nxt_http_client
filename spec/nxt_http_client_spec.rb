@@ -25,7 +25,7 @@ RSpec.describe NxtHttpClient do
     let(:url) { http_stats_url('200') }
 
     it 'calls fire with the respective http method' do
-      expect(subject.post(url)).to eq('200 from level four class level')
+      expect(subject.post(url, params: { andy: 'calling' })).to eq('200 from level four class level')
       expect(subject.get(url)).to eq('200 from level four class level')
       expect(subject.patch(url)).to eq('200 from level four class level')
       expect(subject.put(url)).to eq('200 from level four class level')
