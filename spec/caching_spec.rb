@@ -30,7 +30,9 @@ RSpec.describe NxtHttpClient::Client do
     it 'caches per within the current thread' do
       expect(subject.fire(http_stats_url('200'))).to_not be_cached
       expect(subject.fire(http_stats_url('200'))).to be_cached
+      expect(subject.fire(http_stats_url('200'))).to be_cached
 
+      Thread.new { expect(subject.fire(http_stats_url('200'))).to_not be_cached }.join
       Thread.new { expect(subject.fire(http_stats_url('200'))).to_not be_cached }.join
     end
   end
