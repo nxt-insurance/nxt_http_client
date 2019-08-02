@@ -22,7 +22,7 @@ RSpec.describe NxtHttpClient::Client do
         end
 
         register_defaults do |defaults|
-          defaults.request_options = { cache: true }
+          defaults.request_options = { cache: :thread }
         end
       end
     end

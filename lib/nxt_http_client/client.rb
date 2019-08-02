@@ -1,6 +1,7 @@
 module NxtHttpClient
   class Client
     extend ClientDsl
+    CACHE_STRATEGIES = %w[global thread]
 
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || self.class.base_url
@@ -10,9 +11,18 @@ module NxtHttpClient
       opts[:headers] ||= {}
 
       if opts[:cache] ||= false
-        opts.delete(:cache)
-        cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
-        opts[:headers].reverse_merge!(cache_key: cache_key)
+        strategy = opts.delete(:cache)
+
+        case strategy.to_s
+        when 'thread'
+          cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
+          opts[:headers].reverse_merge!(cache_key: cache_key)
+        when 'global'
+          opts[:headers].delete(:cache_key)
+        else
+          raise ArgumentError, "Cache strategy unknown: #{strategy}. Options are #{CACHE_STRATEGIES}"
+        end
+
       end
 
       Typhoeus::Request.new(url, opts)
