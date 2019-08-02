@@ -117,7 +117,7 @@ RSpec.describe NxtHttpClient::Client do
     let(:headers) { { headers: { Accept: 'text/html', Token: 'my custom token' } }.with_indifferent_access }
 
     it 'deep merges headers from super classes', :vcr_cassette do
-      expect(level_four_client.class.defaults.request_options.with_indifferent_access).to eq(headers)
+      expect(level_four_client.class.default_config.request_options.with_indifferent_access).to eq(headers)
       result = level_four_client.put(http_stats_url('503'))
       expect(result.request.original_options[:headers]).to eq(headers[:headers])
     end

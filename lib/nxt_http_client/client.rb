@@ -4,10 +4,10 @@ module NxtHttpClient
     CACHE_STRATEGIES = %w[global thread]
 
     def build_request(url, **opts)
-      base_url = opts.delete(:base_url) || self.class.base_url
+      base_url = opts.delete(:base_url) || default_config.base_url
       url = [base_url, url].reject(&:blank?).join('/').gsub(/([^https?:]\/\/)/, '/')
 
-      opts = self.class.default_request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
+      opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
 
       if opts[:cache] ||= false
@@ -76,6 +76,10 @@ module NxtHttpClient
 
     def dup_handler_from_class
       self.class.response_handler.dup
+    end
+
+    def default_config
+      self.class.default_config
     end
   end
 end
