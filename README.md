@@ -28,11 +28,14 @@ class MyClient < NxtHttpClient
   
   configure do |config|
     config.base_url = 'www.example.com'
-    config.request_options = {
+    # In your subclasses you probably want to deep_merge options in order to not overwrite options inherited 
+    # from the parent class. Of course this will not influence the parent class and you can also reset them 
+    # to a new hash here.  
+    config.request_options.deep_merge!(
       headers: { API_KEY: '1993' },
       method: :get,
       followlocation: true
-    }
+    )
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } # config to -> { SecureRandom.uuid } 
   end
   
