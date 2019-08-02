@@ -7,9 +7,9 @@ RSpec.describe NxtHttpClient::Client do
 
       attr_accessor :log
 
-      register_defaults do |defaults|
-        defaults.base_url = 'httpstat.us'
-        defaults.request_options = {
+      configure do |config|
+        config.base_url = 'httpstat.us'
+        config.request_options = {
           headers: { Accept: "text/html", Token: 'my custom token' }
         }
       end
@@ -94,9 +94,9 @@ RSpec.describe NxtHttpClient::Client do
 
   let(:level_four) do
     Class.new(level_three) do
-      register_defaults do |defaults|
-        defaults.base_url = nil
-        defaults.request_options.deep_merge(headers: { Token: 'deep merge' })
+      configure do |config|
+        config.base_url = nil
+        config.request_options.deep_merge(headers: { Token: 'deep merge' })
       end
 
       register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|

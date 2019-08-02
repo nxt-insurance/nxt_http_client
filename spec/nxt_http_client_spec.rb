@@ -6,8 +6,8 @@ RSpec.describe NxtHttpClient do
   context 'http methods', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_defaults do |defaults|
-          defaults.base_url = nil
+        configure do |config|
+          config.base_url = nil
         end
 
         register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|

@@ -2,7 +2,7 @@ RSpec.describe NxtHttpClient::Client do
   context 'when the callback is a status code', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_defaults do |config|
+        configure do |config|
           config.request_options = { followlocation: true }
         end
 

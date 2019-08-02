@@ -2,9 +2,9 @@ RSpec.describe NxtHttpClient::Client do
 
   let(:level_one) do
     Class.new(described_class) do
-      register_defaults do |defaults|
-        defaults.base_url = 'httpstat.us'
-        defaults.request_options = { method: :get }
+      configure do |config|
+        config.base_url = 'httpstat.us'
+        config.request_options = { method: :get }
       end
 
       register_response_handler do |handler|

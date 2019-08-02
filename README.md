@@ -26,14 +26,14 @@ Or install it yourself as:
 ```ruby
 class MyClient < NxtHttpClient
   
-  register_defaults do |defaults|
-    defaults.base_url = 'www.example.com'
-    defaults.request_options = {
+  configure do |config|
+    config.base_url = 'www.example.com'
+    config.request_options = {
       headers: { API_KEY: '1993' },
       method: :get,
       followlocation: true
     }
-    defaults.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } # defaults to -> { SecureRandom.uuid } 
+    config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } # config to -> { SecureRandom.uuid } 
   end
   
   register_response_handler do |handler|
@@ -72,7 +72,7 @@ class MyClient < NxtHttpClient
 end
 ```
 
-### register_defaults
+### configure
 
 Register default request options on the class level. Available options are `request_options` that are passed directly to 
 the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`. 

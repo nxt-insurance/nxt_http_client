@@ -1,6 +1,6 @@
 module NxtHttpClient
   module ClientDsl
-    def register_defaults(opts = {}, &block)
+    def configure(opts = {}, &block)
       @default_config ||= DefaultConfig.new(**opts)
       @default_config.tap { |d| block.call(d) }
       @default_config
