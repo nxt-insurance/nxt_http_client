@@ -24,11 +24,11 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      before_fire do |request|
+      before_fire do |client, request, response_handler|
         log << { level_one: request.url }
       end
 
-      after_fire do |request, response, result|
+      after_fire do |client, request, response, result, error|
         log << { level_one: response.code }
         result
       end
@@ -87,11 +87,11 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      before_fire do |request, response_handler|
+      before_fire do |client, request, response_handler|
         log << { level_three: request.url }
       end
 
-      after_fire do |request, response, result, error|
+      after_fire do |client, request, response, result, error|
         log << { level_three: response.code }
 
         if error
