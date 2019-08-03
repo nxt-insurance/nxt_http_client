@@ -56,15 +56,21 @@ module NxtHttpClient
       end
 
       result = nil
+      error = nil
 
       request.on_complete do |response|
         callback = response_handler.callback_for_response(response)
         result = callback && instance_exec(response, &callback) || response
-
+      rescue StandardError => e
+        error = e
+      ensure
         after_fire_callback = self.class.after_fire_callback
-        after_fire_callback && instance_exec(request, response, result, &after_fire_callback)
 
-        result
+        if after_fire_callback
+          result = instance_exec(request, response, (result || error), &after_fire_callback)
+        else
+          result || (raise error)
+        end
       end
 
       request.run

@@ -30,6 +30,7 @@ RSpec.describe NxtHttpClient::Client do
 
       after_fire do |request, response, result|
         log << { level_one: response.code }
+        result
       end
     end
   end
@@ -79,6 +80,10 @@ RSpec.describe NxtHttpClient::Client do
           handler.on('4**') do |response|
             'fresh 4** from level three'
           end
+
+          handler.on('5**') do |response|
+            raise StandardError, 'Raisor blade'
+          end
         end
       end
 
@@ -88,6 +93,7 @@ RSpec.describe NxtHttpClient::Client do
 
       after_fire do |request, response, result|
         log << { level_three: response.code }
+        result.is_a?(StandardError) ? (raise result) : result
       end
     end
   end
@@ -186,6 +192,12 @@ RSpec.describe NxtHttpClient::Client do
 
       expect { level_three_client.fresh_call('200') }.to change { level_three_client.log }
       expect(level_three_client.log.last).to eq(level_three: 200)
+    end
+
+    context 'when there was an error' do
+      it 'passes the error to the callback', :vcr_cassette do
+        expect { level_three.new.fresh_call('503') }.to raise_error StandardError, 'Raisor blade'
+      end
     end
   end
 end
