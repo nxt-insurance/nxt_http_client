@@ -60,7 +60,11 @@ class MyClient < NxtHttpClient
    
     # In case one of the response handler callbacks raises an error
     # after fire will has access to it and you may want to reraise the error in that case.
-    raise result if result.is_a?(StandardError)  
+    if error
+      raise error
+    else  
+      result
+    end
   end
   
   def fetch_details
