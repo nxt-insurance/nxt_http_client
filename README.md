@@ -83,6 +83,13 @@ class MyClient < NxtHttpClient
       end
     end
   end
+  
+  def update
+    # there are also convenience methods for all http verbs (get post patch put delete head)
+    post(params: { my: 'payload' }) do |handler|
+      # would post to the base_url
+    end
+  end
 end
 ```
 
