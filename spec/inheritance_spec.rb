@@ -93,7 +93,8 @@ RSpec.describe NxtHttpClient::Client do
 
       after_fire do |request, response, result|
         log << { level_three: response.code }
-        result.is_a?(StandardError) ? (raise result) : result
+        raise result if result.is_a?(StandardError)
+        result
       end
     end
   end

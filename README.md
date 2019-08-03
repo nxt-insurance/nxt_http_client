@@ -55,7 +55,12 @@ class MyClient < NxtHttpClient
   end
   
   after_fire do |request, result, response|
-    # Will be called after fire 
+    # Will be called after fire. You probably want to return the result here in order for your code 
+    # to be able to access the result from the response handler from before. 
+   
+    # In case one of the response handler callbacks raises an error
+    # after fire will receive the error as the result and you may want to reraise the error in that case
+    raise result if result.is_a?(StandardError)  
   end
   
   def fetch_details
