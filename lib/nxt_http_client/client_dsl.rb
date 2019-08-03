@@ -43,9 +43,9 @@ module NxtHttpClient
     end
 
     def inherited(child)
-      child.instance_variable_set(:@response_handler, @response_handler.dup)
-      child.instance_variable_set(:@before_fire_callback, @before_fire_callback.dup)
-      child.instance_variable_set(:@after_fire_callback, @after_fire_callback.dup)
+      child.instance_variable_set(:@response_handler, response_handler.dup)
+      child.instance_variable_set(:@before_fire_callback, before_fire_callback.dup)
+      child.instance_variable_set(:@after_fire_callback, after_fire_callback.dup)
       child.instance_variable_set(:@default_config, DefaultConfig.new(**default_config.to_h.deep_dup))
     end
   end
