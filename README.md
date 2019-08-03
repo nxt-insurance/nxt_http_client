@@ -47,14 +47,14 @@ class MyClient < NxtHttpClient
     end
   end
   
-  before_fire do |request, handler|
+  before_fire do |client, request, handler|
     # Will be called before fire
     handler.on!(200) do |response|
       # reconfigure your handler before fire
     end
   end
   
-  after_fire do |request, response, result, error|
+  after_fire do |client, request, response, result, error|
     # Will be called after fire. You probably want to return the result here in order for your code 
     # to be able to access the result from the response handler from before. 
    
