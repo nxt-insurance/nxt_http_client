@@ -91,10 +91,14 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_three: request.url }
       end
 
-      after_fire do |request, response, result|
+      after_fire do |request, response, result, error|
         log << { level_three: response.code }
-        raise result if result.is_a?(StandardError)
-        result
+
+        if error
+          raise error
+        else
+          result
+        end
       end
     end
   end

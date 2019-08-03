@@ -67,7 +67,7 @@ module NxtHttpClient
         after_fire_callback = self.class.after_fire_callback
 
         if after_fire_callback
-          result = instance_exec(request, response, (result || error), &after_fire_callback)
+          result = instance_exec(request, response, result, error, &after_fire_callback)
         else
           result || (raise error)
         end
