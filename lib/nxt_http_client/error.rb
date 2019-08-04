@@ -1,18 +1,18 @@
 module NxtHttpClient
   class Error < StandardError
-    def initialize(response = Typhoeus::Response.new)
-      @response = response
+    def initialize(response)
+      @response = response.blank? ? Typhoeus::Response.new : response
     end
 
     attr_reader :response
 
     def body
-      if response_content_type.include?('application')
+      if response_content_type == 'application/json'
         JSON.parse(response.body)
       else
         response.body
       end
-    rescue JSONError
+    rescue ::JSON::JSONError
       response.body
     end
 
@@ -21,7 +21,7 @@ module NxtHttpClient
     end
 
     def url
-      response.url
+      request.url
     end
 
     def request_options
@@ -29,7 +29,7 @@ module NxtHttpClient
     end
 
     def request_headers
-      @request_headers ||= (response.request.original_options[:headers] || {}).with_indifferent_access
+      @request_headers ||= (request.original_options[:headers] || {}).with_indifferent_access
     end
 
     def response_options
