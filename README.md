@@ -149,6 +149,11 @@ You can also hook into the before_fire and after_fire callbacks to do something 
 These callbacks are inherited down the class hierarchy but are not being chained. Meaning when you overwrite those in your subclass,
 the callbacks defined by your parent class will not be called anymore.
 
+### NxtHttpClient::Error
+
+NxtHttpClient also provides an error base class that you might want to use as the base for your client errors.
+It comes with a nice set of useful methods. You can ask the error for the request and response options since it
+requires the response for initialization. 
 
 ## Development
 
