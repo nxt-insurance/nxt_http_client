@@ -1,0 +1,40 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://echo.jsontest.com/key/value/one/two
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Access-Control-Allow-Origin:
+      - "*"
+      Content-Type:
+      - application/json
+      X-Cloud-Trace-Context:
+      - e1b0139ca59f780e11c311c22ac32b74
+      Date:
+      - Sun, 04 Aug 2019 09:00:31 GMT
+      Server:
+      - Google Frontend
+      Content-Length:
+      - '39'
+    body:
+      encoding: UTF-8
+      string: |
+        {
+           "one": "two",
+           "key": "value"
+        }
+    http_version: 
+  recorded_at: Sun, 04 Aug 2019 08:58:30 GMT
+recorded_with: VCR 5.0.0

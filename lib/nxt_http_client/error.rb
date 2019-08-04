@@ -16,6 +16,14 @@ module NxtHttpClient
       response.body
     end
 
+    def to_s
+      "NxtHttpClient::Error::#{status_code}"
+    end
+
+    def status_code
+      response.code || 0
+    end
+
     def request
       @request ||= response.request || Typhoeus::Request.new('/dev/null', {})
     end
@@ -37,7 +45,7 @@ module NxtHttpClient
     end
 
     def response_headers
-      @response_headers ||= (response_options[:headers] || {}).with_indifferent_access
+      @response_headers ||= (response.headers || {}).with_indifferent_access
     end
 
     def response_content_type
