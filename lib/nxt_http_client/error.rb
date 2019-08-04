@@ -6,6 +6,20 @@ module NxtHttpClient
 
     attr_reader :response
 
+    def to_s
+      "NxtHttpClient::Error::#{response_code}"
+    end
+
+    def to_h
+      {
+        url: url,
+        response_code: response_code,
+        request_options: request_options,
+        response_headers: response_headers,
+        body: body
+      }
+    end
+
     def body
       if response_content_type == 'application/json'
         JSON.parse(response.body)
@@ -14,10 +28,6 @@ module NxtHttpClient
       end
     rescue ::JSON::JSONError
       response.body
-    end
-
-    def to_s
-      "NxtHttpClient::Error::#{response_code}"
     end
 
     def response_code
