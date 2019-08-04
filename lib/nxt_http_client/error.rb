@@ -17,10 +17,10 @@ module NxtHttpClient
     end
 
     def to_s
-      "NxtHttpClient::Error::#{status_code}"
+      "NxtHttpClient::Error::#{response_code}"
     end
 
-    def status_code
+    def response_code
       response.code || 0
     end
 
