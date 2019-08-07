@@ -5,7 +5,12 @@ module NxtHttpClient
 
     def build_request(url, **opts)
       base_url = opts.delete(:base_url) || default_config.base_url
-      url = [base_url, url].reject(&:blank?).join('/').gsub(/([^https?:]\/\/)/, '/')
+      url = [base_url, url].reject(&:blank?).join('/')
+
+      duplicated_slashes = url.match(/([^:]\/{2,})/)
+      duplicated_slashes && duplicated_slashes.captures.each do |capture|
+        url.gsub!(capture, "#{capture[0]}/")
+      end
 
       opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
