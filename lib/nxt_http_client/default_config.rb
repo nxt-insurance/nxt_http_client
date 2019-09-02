@@ -7,5 +7,9 @@ module NxtHttpClient
       self.base_url = base_url
       self.x_request_id_proc = x_request_id_proc
     end
+
+    def dup
+      self.class.new(**to_h.deep_dup)
+    end
   end
 end

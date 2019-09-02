@@ -38,4 +38,41 @@ RSpec.describe NxtHttpClient::Client do
       expect(subject.call('400')).to eq("httpstat.us/400")
     end
   end
+
+  context 'inheritance' do
+    let(:level_one) do
+      Class.new(described_class) do
+        configure do |config|
+          config.base_url = 'httpstat.us'
+          config.request_options.deep_merge!(headers: { token: 'level one token'})
+        end
+      end
+    end
+
+    let(:level_two) do
+      Class.new(level_one) do
+        configure do |config|
+          config.base_url = 'httpstat.us'
+          config.request_options.deep_merge!(headers: { token: 'level two token'})
+        end
+      end
+    end
+
+    let(:level_three) do
+      Class.new(level_one) do
+        configure do |config|
+          config.base_url = 'httpstat.us'
+          config.request_options.deep_merge!(headers: { token: 'level three token'})
+        end
+      end
+    end
+
+    it 'dups the configuration' do
+      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+      expect(level_three.default_config.request_options).to eq({"headers"=>{"token"=>"level three token"}})
+      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+      expect(level_two.default_config.request_options).to eq({"headers"=>{"token"=>"level two token"}})
+      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+    end
+  end
 end
