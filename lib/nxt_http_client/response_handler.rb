@@ -1,9 +1,15 @@
 module NxtHttpClient
   class ResponseHandler
     CallbackAlreadyRegistered = Class.new(StandardError)
+    include NxtRegistry
 
     def initialize
-      @callbacks = {}
+      @callbacks = registry(
+        :callbacks,
+        call: false,
+        on_key_already_registered: ->(key) { raise_callback_already_registered(key) }
+      )
+
       @result = nil
     end
 
@@ -11,8 +17,8 @@ module NxtHttpClient
     attr_reader :callbacks
 
     def eval_callback(target, key, response)
-      return unless callbacks[key]
-      target.instance_exec(response, &callbacks[key])
+      return unless callbacks.resolve!(key)
+      target.instance_exec(response, &callbacks.resolve(key))
     end
 
     def configure(&block)
@@ -20,13 +26,11 @@ module NxtHttpClient
     end
 
     def register_callback(code, overwrite: false, &block)
-      key = code.to_s
-      # This would add callbacks to the response handler
-      unless overwrite
-        callbacks[key].present? && raise_callback_already_registered(code)
+      if overwrite
+        callbacks.register!(code, block)
+      else
+        callbacks.register(code, block)
       end
-
-      callbacks[key] = block
     end
 
     def register_callback!(code, &block)
@@ -60,10 +64,9 @@ module NxtHttpClient
       raise CallbackAlreadyRegistered, msg
     end
 
-    # we need to dup callbacks since dup is shallow
     def initialize_copy(original)
       super
-      @callbacks = original.send(:callbacks).dup
+      @callbacks = original.send(:callbacks).clone
       @result = nil
     end
   end

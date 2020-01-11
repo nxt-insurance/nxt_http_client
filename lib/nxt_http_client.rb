@@ -1,5 +1,6 @@
 require 'active_support/all'
 require 'typhoeus'
+require 'nxt_registry'
 
 require 'nxt_http_client/version'
 require 'nxt_http_client/response_handler'
