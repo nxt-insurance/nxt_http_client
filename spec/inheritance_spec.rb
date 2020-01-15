@@ -154,9 +154,9 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     it 'does not touch the callbacks of the super class' do
-      expect { level_two }.to_not change { level_one.response_handler.send(:callbacks) }
-      expect { level_three }.to_not change { level_one.response_handler.send(:callbacks) }
-      expect { level_three }.to_not change { level_two.response_handler.send(:callbacks) }
+      expect { level_two }.to_not change { level_one.response_handler.send(:callbacks).to_h }
+      expect { level_three }.to_not change { level_one.response_handler.send(:callbacks).to_h }
+      expect { level_three }.to_not change { level_two.response_handler.send(:callbacks).to_h }
     end
   end
 
