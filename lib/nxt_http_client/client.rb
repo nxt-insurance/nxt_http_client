@@ -4,19 +4,8 @@ module NxtHttpClient
     CACHE_STRATEGIES = %w[global thread]
 
     def build_request(url, **opts)
-      base_url = opts.delete(:base_url) || default_config.base_url
-      url = [base_url, url].reject(&:blank?).join('/')
-
-      url_without_duplicated_hashes(url)
-
-      opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
-      opts[:headers] ||= {}
-
-      if default_config.x_request_id_proc
-        opts[:headers]['X-Request-ID'] ||= default_config.x_request_id_proc.call
-      end
-
-      build_cache_header(opts)
+      url = build_url(opts, url)
+      opts = build_headers(opts)
 
       Typhoeus::Request.new(url, **opts.symbolize_keys)
     end
@@ -75,6 +64,26 @@ module NxtHttpClient
     end
 
     private
+
+    def build_url(opts, url)
+      base_url = opts.delete(:base_url) || default_config.base_url
+      url = [base_url, url].reject(&:blank?).join('/')
+
+      url_without_duplicated_hashes(url)
+      url
+    end
+
+    def build_headers(opts)
+      opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
+      opts[:headers] ||= {}
+
+      if default_config.x_request_id_proc
+        opts[:headers]['X-Request-ID'] ||= default_config.x_request_id_proc.call
+      end
+
+      build_cache_header(opts)
+      opts
+    end
 
     def dup_handler_from_class
       self.class.response_handler.dup
