@@ -34,21 +34,28 @@ jobs:
 
       # run tests!
       - run:
-          name: run tests
+          name: Collect and filter specs
           command: |
-            mkdir /tmp/test-results
-            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | \
-              circleci tests split --split-by=timings)"
-
-            bundle exec rspec \
+            mkdir -p tmp/circleci
+            circleci tests glob "spec/**/*_spec.rb" > tmp/circleci/all_tests.txt
+            circleci tests split --split-by=timings < tmp/circleci/all_tests.txt > tmp/circleci/tests_to_run.txt
+            echo "These specs will be run:"
+            cat tmp/circleci/tests_to_run.txt
+      - run:
+          name: Parallel RSpec
+          command: |
+            bin/rspec \
+              --color \
               --format progress \
-              --format RspecJunitFormatter \
-              --out /tmp/test-results/rspec.xml \
-              $TEST_FILES
-
-      # collect reports
-      - store_test_results:
-          path: /tmp/test-results
+              --require spec_helper \
+              --format RSpec::Instafail \
+              --format RspecJunitFormatter --out /tmp/rspec/junit.xml \
+              $(cat tmp/circleci/tests_to_run.txt)
+      # actually not necessary for test results to be collected, but these files
+      # won't show up in the web UI otherwise
       - store_artifacts:
-          path: /tmp/test-results
-          destination: test-results
+          path: /tmp/rspec/
+          destination: rspec
+
+      - store_test_results:
+          path: /tmp/rspec/
