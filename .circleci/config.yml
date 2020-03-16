@@ -6,10 +6,10 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/ruby:2.6.5-node
+      - image: circleci/ruby:2.7.0-node
       - image: circleci/redis:5.0.4
-        environment:
-          BUNDLER_VERSION: 2.0.2
+    environment:
+      BUNDLER_VERSION: 2.1.4
 
     working_directory: ~/repo
 
@@ -21,7 +21,8 @@ jobs:
           keys:
             - v1-dependencies-{{ checksum "Gemfile.lock" }}
 
-      - run: gem install bundler
+      - run: gem install bundler --version $BUNDLER_VERSION
+
       - run:
           name: install dependencies
           command: |
@@ -34,25 +35,20 @@ jobs:
 
       # run tests!
       - run:
-          name: Collect and filter specs
+          name: run tests
           command: |
-            mkdir -p tmp/circleci
-            circleci tests glob "spec/**/*_spec.rb" > tmp/circleci/all_tests.txt
-            circleci tests split --split-by=timings < tmp/circleci/all_tests.txt > tmp/circleci/tests_to_run.txt
-            echo "These specs will be run:"
-            cat tmp/circleci/tests_to_run.txt
-      - run:
-          name: Parallel RSpec
-          command: |
-            bin/rspec \
-              --color \
+            mkdir /tmp/test-results
+            TEST_FILES="$(circleci tests glob "spec/**/*_spec.rb" | \
+              circleci tests split --split-by=timings)"
+
+            bundle exec rspec \
               --format progress \
-              --require spec_helper \
-              --format RSpec::Instafail \
-              --format RspecJunitFormatter --out /tmp/rspec/junit.xml \
-              $(cat tmp/circleci/tests_to_run.txt)
-      # actually not necessary for test results to be collected, but these files
-      # won't show up in the web UI otherwise
+              --format RspecJunitFormatter \
+              --out /tmp/test-results/rspec.xml \
+              --format progress \
+              $TEST_FILES
+
+      # collect reports
       - store_artifacts:
           path: /tmp/rspec/
           destination: rspec
