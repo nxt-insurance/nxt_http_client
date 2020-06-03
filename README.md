@@ -43,6 +43,7 @@ class MyClient < NxtHttpClient
   
   register_response_handler do |handler|
     handler.on(:error) do |response|
+      Raven.extra_context(error_details: error.to_h) # call error.to_h to inspect request and response
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
