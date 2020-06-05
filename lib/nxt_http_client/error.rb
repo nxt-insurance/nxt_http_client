@@ -2,9 +2,10 @@ module NxtHttpClient
   class Error < StandardError
     def initialize(response)
       @response = response.blank? ? Typhoeus::Response.new : response
+      @id = SecureRandom.uuid
     end
 
-    attr_reader :response
+    attr_reader :response, :id
 
     def to_s
       "NxtHttpClient::Error::#{response_code}"
@@ -12,6 +13,7 @@ module NxtHttpClient
 
     def to_h
       {
+        id: id,
         url: url,
         response_code: response_code,
         request_options: request_options,
