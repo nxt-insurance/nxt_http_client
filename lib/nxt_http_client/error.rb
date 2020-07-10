@@ -32,6 +32,8 @@ module NxtHttpClient
       response.body
     end
 
+    alias_method :message, :body
+
     def response_code
       response.code || 0
     end
