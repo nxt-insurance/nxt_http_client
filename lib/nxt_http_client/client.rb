@@ -17,7 +17,7 @@ module NxtHttpClient
       end
 
       response_handler.configure(&block) if block_given?
-      request = build_request(url, opts.except(:response_handler))
+      request = build_request(url, **opts.except(:response_handler))
 
       before_fire_callback = self.class.before_fire_callback
       before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
