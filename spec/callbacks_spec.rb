@@ -75,9 +75,13 @@ RSpec.describe NxtHttpClient::Client do
     context ':error', :vcr_cassette do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
+          def self.name
+            'Test Client'
+          end
+
           register_response_handler do |handler|
             handler.on(:error) do |response|
-              raise StandardError, 'Response not successful'
+              raise NxtHttpClient::Error.new(response, "#{self.class.name} => Response not successful")
             end
           end
         end
@@ -86,7 +90,7 @@ RSpec.describe NxtHttpClient::Client do
       it 'runs the error callback' do
         expect {
           subject.fire('www.f193a3d484c97517369fa15e6e586b44.com')
-        }.to raise_error StandardError, /Response not successful/
+        }.to raise_error NxtHttpClient::Error, 'Test Client => Response not successful'
       end
     end
 
