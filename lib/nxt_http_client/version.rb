@@ -1,3 +1,3 @@
 module NxtHttpClient
-  VERSION = "0.2.10"
+  VERSION = "0.2.9"
 end
