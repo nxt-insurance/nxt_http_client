@@ -28,7 +28,7 @@ module NxtHttpClient
     end
 
     def body
-      if response_content_type == 'application/json'
+      if response_content_type&.starts_with?('application/json')
         JSON.parse(response.body)
       else
         response.body
