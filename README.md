@@ -94,6 +94,42 @@ class MyClient < NxtHttpClient
 end
 ```
 
+### HTTP Methods
+
+Instead of fire you can simply use the http verbs as methods
+
+```ruby
+class MyClient < NxtHttpClient
+  
+  def initialize(url)
+    @url = url
+  end
+
+  attr_reader :url
+
+  def fetch
+    get(url) do
+      handler.on(:success) { |response| response.body }
+    end
+  end
+
+  def create(params)
+    post(url, params: params) do
+      handler.on(:success) { |response| response.body }
+    end
+  end
+
+  def update(params)
+    put(url, params: params) do
+      handler.on(:success) { |response| response.body }
+    end
+  end
+
+  # ... there are others as you know ...
+end
+```
+
+
 ### configure
 
 Register default request options on the class level. Available options are `request_options` that are passed directly to 

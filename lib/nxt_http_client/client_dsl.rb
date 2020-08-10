@@ -1,9 +1,7 @@
 module NxtHttpClient
   module ClientDsl
     def configure(opts = {}, &block)
-      opts.each do |k,v|
-        default_config.send(k, v)
-      end
+      opts.each { |k, v| default_config.send(k, v) }
       default_config.tap { |d| block.call(d) }
       default_config
     end
@@ -13,7 +11,7 @@ module NxtHttpClient
     end
 
     def before_fire_callback
-      @before_fire ||= dup_instance_variable_from_ancestor_chain(:@before_fire_callback)
+      @before_fire_callback ||= dup_instance_variable_from_ancestor_chain(:@before_fire_callback)
     end
 
     def after_fire(&block)
@@ -44,21 +42,16 @@ module NxtHttpClient
     end
 
     def instance_variable_from_ancestor_chain(instance_variable_name)
-      client = client_ancestors.find do |client|
-        client.instance_variable_get(instance_variable_name)
-      end
+      client = client_ancestors.find { |c| c.instance_variable_get(instance_variable_name) }
 
       client.instance_variable_get(instance_variable_name)
     end
 
     def dup_instance_variable_from_ancestor_chain(instance_variable_name)
       result = instance_variable_from_ancestor_chain(instance_variable_name).dup
+      return result unless block_given?
 
-      if block_given?
-        result || yield
-      else
-        result
-      end
+      result || yield
     end
   end
 end

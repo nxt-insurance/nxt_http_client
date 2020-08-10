@@ -1,5 +1,5 @@
 module NxtHttpClient
-  CONFIGURABLE_OPTIONS = %i[request_options base_url x_request_id_proc]
+  CONFIGURABLE_OPTIONS = %i[request_options base_url x_request_id_proc].freeze
 
   DefaultConfig = Struct.new('DefaultConfig', *CONFIGURABLE_OPTIONS) do
     def initialize(request_options: ActiveSupport::HashWithIndifferentAccess.new, base_url: '', x_request_id_proc: nil)

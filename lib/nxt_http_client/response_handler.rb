@@ -4,20 +4,14 @@ module NxtHttpClient
     include NxtRegistry
 
     def initialize
-      @callbacks = registry(
-        :callbacks,
-        call: false,
-        on_key_already_registered: ->(key) { raise_callback_already_registered(key) }
-      )
-
       @result = nil
     end
 
     attr_accessor :result
-    attr_reader :callbacks
 
     def eval_callback(target, key, response)
       return unless callbacks.resolve!(key)
+
       target.instance_exec(response, &callbacks.resolve(key))
     end
 
@@ -37,8 +31,8 @@ module NxtHttpClient
       register_callback(code, overwrite: true, &block)
     end
 
-    alias_method :on, :register_callback
-    alias_method :on!, :register_callback!
+    alias on register_callback
+    alias on! register_callback!
 
     def callback_for_response(response)
       key_from_response = response.code.to_s
@@ -50,10 +44,18 @@ module NxtHttpClient
       end
 
       first_matching_key && callbacks[first_matching_key] ||
-      response.success? && callbacks['success'] ||
-      response.timed_out? && callbacks['timed_out'] ||
-      !response.success? && callbacks['error'] ||
-      callbacks['others']
+        response.success? && callbacks['success'] ||
+        response.timed_out? && callbacks['timed_out'] ||
+        !response.success? && callbacks['error'] ||
+        callbacks['others']
+    end
+
+    def callbacks
+      @callbacks ||= NxtRegistry::Registry.new(
+        :callbacks,
+        call: false,
+        on_key_already_registered: ->(key) { raise_callback_already_registered(key) }
+      )
     end
 
     private

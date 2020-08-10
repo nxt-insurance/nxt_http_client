@@ -11,5 +11,4 @@ require 'nxt_http_client/error'
 
 module NxtHttpClient
   class Error < StandardError; end
-  # Your code goes here...
 end

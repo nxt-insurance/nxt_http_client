@@ -1,7 +1,8 @@
 module NxtHttpClient
   class Client
     extend ClientDsl
-    CACHE_STRATEGIES = %w[global thread]
+    CACHE_STRATEGIES = %w[global thread].freeze
+    HTTP_METHODS = %w[get post patch put delete head].freeze
 
     def build_request(url, **opts)
       url = build_url(opts, url)
@@ -10,16 +11,12 @@ module NxtHttpClient
       Typhoeus::Request.new(url, **opts.symbolize_keys)
     end
 
+    delegate :before_fire_callback, :after_fire_callback, to: :class
+
     def fire(url = '', **opts, &block)
-      # calling_method = caller_locations(1,1)[0].label
-      response_handler = opts.fetch(:response_handler) do
-        dup_handler_from_class || NxtHttpClient::ResponseHandler.new
-      end
-
+      response_handler = opts.fetch(:response_handler) { dup_handler_from_class || NxtHttpClient::ResponseHandler.new }
       response_handler.configure(&block) if block_given?
-      request = build_request(url, opts.except(:response_handler))
-
-      before_fire_callback = self.class.before_fire_callback
+      request = build_request(url, **opts.except(:response_handler))
       before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
 
       if response_handler.callbacks['headers']
@@ -35,20 +32,17 @@ module NxtHttpClient
       end
 
       result = nil
-      error = nil
+      current_error = nil
 
       request.on_complete do |response|
-        callback = response_handler.callback_for_response(response)
-        result = callback && instance_exec(response, &callback) || response
-      rescue StandardError => e
-        error = e
+        result = callback_or_response(response, response_handler)
+      rescue StandardError => error
+        current_error = error
       ensure
-        after_fire_callback = self.class.after_fire_callback
-
         if after_fire_callback
-          result = instance_exec(self, request, response, result, error, &after_fire_callback)
+          result = instance_exec(self, request, response, result, current_error, &after_fire_callback)
         else
-          result || (raise error)
+          result || (raise current_error)
         end
       end
 
@@ -57,9 +51,9 @@ module NxtHttpClient
       result
     end
 
-    %w[get post patch put delete head].each do |method|
+    HTTP_METHODS.each do |method|
       define_method method do |url = '', **opts, &block|
-        fire(url, opts.reverse_merge(method: method), &block)
+        fire(url, **opts.reverse_merge(method: method), &block)
       end
     end
 
@@ -118,5 +112,9 @@ module NxtHttpClient
       url
     end
 
+    def callback_or_response(response, response_handler)
+      callback = response_handler.callback_for_response(response)
+      callback && instance_exec(response, &callback) || response
+    end
   end
 end
