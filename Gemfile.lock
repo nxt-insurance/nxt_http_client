@@ -30,7 +30,7 @@ GEM
       concurrent-ruby (~> 1.0)
     method_source (1.0.0)
     minitest (5.14.2)
-    nxt_registry (0.2.1)
+    nxt_registry (0.3.0)
       activesupport
     nxt_vcr_harness (0.1.3)
       rspec (~> 3.0)
