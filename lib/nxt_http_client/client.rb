@@ -19,13 +19,13 @@ module NxtHttpClient
       request = build_request(url, **opts.except(:response_handler))
       before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
 
-      if response_handler.callbacks['headers']
+      if response_handler.callbacks.resolve('headers')
         request.on_headers do |response|
           response_handler.eval_callback(self, 'headers', response)
         end
       end
 
-      if response_handler.callbacks['body']
+      if response_handler.callbacks.resolve('body')
         request.on_body do |response|
           response_handler.eval_callback(self, 'body', response)
         end

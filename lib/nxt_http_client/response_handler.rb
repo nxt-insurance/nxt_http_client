@@ -36,18 +36,18 @@ module NxtHttpClient
 
     def callback_for_response(response)
       key_from_response = response.code.to_s
-      return callbacks['any'] if callbacks['any'].present?
+      return callbacks.resolve('any') if callbacks.resolve('any').present?
 
       first_matching_key = callbacks.keys.sort.reverse.find do |key|
         regex_key = key.gsub('*', '[0-9]{1}')
         key_from_response =~ /\A#{regex_key}\z/
       end
 
-      first_matching_key && callbacks[first_matching_key] ||
-        response.success? && callbacks['success'] ||
-        response.timed_out? && callbacks['timed_out'] ||
-        !response.success? && callbacks['error'] ||
-        callbacks['others']
+      first_matching_key && callbacks.resolve(first_matching_key) ||
+        response.success? && callbacks.resolve('success') ||
+        response.timed_out? && callbacks.resolve('timed_out') ||
+        !response.success? && callbacks.resolve('error') ||
+        callbacks.resolve('others')
     end
 
     def callbacks
