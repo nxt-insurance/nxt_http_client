@@ -26,18 +26,20 @@ Or install it yourself as:
 ```ruby
 class MyClient < NxtHttpClient
   
+  # In your subclasses you probably want to deep_merge options in order to not overwrite options inherited 
+  # from the parent class. Of course this will not influence the parent class and you can also reset them 
+  # to a new hash here.
+  
+  # Also be aware that the result of x_request_id_proc will be hashed into the cache key and thus might cause 
+  # your request not to be cached if not used properly
+
   configure do |config|
     config.base_url = 'www.example.com'
-    # In your subclasses you probably want to deep_merge options in order to not overwrite options inherited 
-    # from the parent class. Of course this will not influence the parent class and you can also reset them 
-    # to a new hash here.  
     config.request_options.deep_merge!(
       headers: { API_KEY: '1993' },
       method: :get,
       followlocation: true
     )
-    # Be aware that the result of x_request_id_proc will be hashed into the cache key and thus might cause 
-    # your request not to be cached if not used properly 
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
@@ -48,19 +50,19 @@ class MyClient < NxtHttpClient
     end
   end
   
+  # Will be called before fire so you can reconfigure your handler before fire
   before_fire do |client, request, handler|
-    # Will be called before fire
     handler.on!(200) do |response|
-      # reconfigure your handler before fire
+      # ...
     end
   end
   
+  # Will be called after fire. You probably want to return the result here in order for your code 
+  # to be able to access the result from the response handler from before. 
+  # In case one of the response handler callbacks raises an error
+  # after fire will has access to it and you may want to reraise the error in that case.
+
   after_fire do |client, request, response, result, error|
-    # Will be called after fire. You probably want to return the result here in order for your code 
-    # to be able to access the result from the response handler from before. 
-   
-    # In case one of the response handler callbacks raises an error
-    # after fire will has access to it and you may want to reraise the error in that case.
     if error
       raise error
     else  
@@ -85,10 +87,10 @@ class MyClient < NxtHttpClient
     end
   end
   
+  # there are also convenience methods for all http verbs (get post patch put delete head)
   def update
-    # there are also convenience methods for all http verbs (get post patch put delete head)
     post(params: { my: 'payload' }) do |handler|
-      # would post to the base_url
+    # ...
     end
   end
 end
