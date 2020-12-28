@@ -10,8 +10,6 @@ module NxtHttpClient
     attr_accessor :result
 
     def eval_callback(target, key, response)
-      return unless callbacks.resolve!(key)
-
       target.instance_exec(response, &callbacks.resolve(key))
     end
 
