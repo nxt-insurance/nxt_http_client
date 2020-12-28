@@ -14,22 +14,11 @@ module NxtHttpClient
     delegate :before_fire_callback, :after_fire_callback, to: :class
 
     def fire(url = '', **opts, &block)
-      response_handler = opts.fetch(:response_handler) { dup_handler_from_class || NxtHttpClient::ResponseHandler.new }
-      response_handler.configure(&block) if block_given?
+      response_handler = build_response_handler(opts[:response_handler], &block)
       request = build_request(url, **opts.except(:response_handler))
-      before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
-
-      if response_handler.callbacks.resolve('headers')
-        request.on_headers do |response|
-          response_handler.eval_callback(self, 'headers', response)
-        end
-      end
-
-      if response_handler.callbacks.resolve('body')
-        request.on_body do |response|
-          response_handler.eval_callback(self, 'body', response)
-        end
-      end
+      run_before_fire_callback(request, response_handler)
+      run_on_headers_callback(request, response_handler)
+      run_on_body_callback(request, response_handler)
 
       result = nil
       current_error = nil
@@ -39,15 +28,11 @@ module NxtHttpClient
       rescue StandardError => error
         current_error = error
       ensure
-        if after_fire_callback
-          result = instance_exec(self, request, response, result, current_error, &after_fire_callback)
-        else
-          result || (raise current_error)
-        end
+        result = run_after_fire_callback(request, response, result, current_error)
+        result || (raise current_error)
       end
 
       request.run
-
       result
     end
 
@@ -115,6 +100,40 @@ module NxtHttpClient
     def callback_or_response(response, response_handler)
       callback = response_handler.callback_for_response(response)
       callback && instance_exec(response, &callback) || response
+    end
+
+    def build_response_handler(handler, &block)
+      response_handler = handler || dup_handler_from_class || NxtHttpClient::ResponseHandler.new
+      response_handler.configure(&block) if block_given?
+      response_handler
+    end
+
+    def run_before_fire_callback(request, response_handler)
+      before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
+    end
+
+    def run_after_fire_callback(request, response, result, current_error)
+      if after_fire_callback
+        result = instance_exec(self, request, response, result, current_error, &after_fire_callback)
+      end
+
+      result
+    end
+
+    def run_on_headers_callback(request, response_handler)
+      return unless response_handler.callbacks.resolve('headers')
+
+      request.on_headers do |response|
+        response_handler.eval_callback(self, 'headers', response)
+      end
+    end
+
+    def run_on_body_callback(request, response_handler)
+      return unless response_handler.callbacks.resolve('body')
+
+      request.on_body do |response|
+        response_handler.eval_callback(self, 'body', response)
+      end
     end
   end
 end
