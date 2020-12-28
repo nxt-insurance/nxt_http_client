@@ -13,7 +13,7 @@ module NxtHttpClient
     alias_method :to_s, :message
 
     def default_message
-      "NxtHttpClient::Error::#{response_code}"
+      "#{self.class.name}::#{response_code}"
     end
 
     def to_h
@@ -23,6 +23,7 @@ module NxtHttpClient
         response_code: response_code,
         request_options: request_options,
         response_headers: response_headers,
+        request_headers: request_headers,
         body: body
       }
     end

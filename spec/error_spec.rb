@@ -45,7 +45,7 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.response_headers).to match(hash_including('Content-Type' => 'text/plain; charset=utf-8'))
       expect(subject.response_content_type).to eq('text/plain; charset=utf-8')
 
-      expect(subject.to_h.keys).to match_array(%i[id url response_code request_options response_headers body])
+      expect(subject.to_h.keys).to match_array(%i[id url response_code request_options response_headers request_headers body])
     end
   end
 
