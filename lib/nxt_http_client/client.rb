@@ -57,7 +57,7 @@ module NxtHttpClient
       opts[:headers] ||= {}
 
       if default_config.x_request_id_proc
-        opts[:headers]['X-Request-ID'] ||= default_config.x_request_id_proc.call
+        opts[:headers][XRequestId] ||= default_config.x_request_id_proc.call
       end
 
       build_cache_header(opts)

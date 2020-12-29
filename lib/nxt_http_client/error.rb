@@ -24,7 +24,8 @@ module NxtHttpClient
         request_options: request_options,
         response_headers: response_headers,
         request_headers: request_headers,
-        body: body
+        body: body,
+        x_request_id: x_request_id
       }
     end
 
@@ -48,6 +49,10 @@ module NxtHttpClient
 
     def url
       request.url
+    end
+
+    def x_request_id
+      request_headers[XRequestId]
     end
 
     def request_options
