@@ -37,6 +37,8 @@ module NxtHttpClient
       @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
     end
 
+    private
+
     def client_ancestors
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }
     end
