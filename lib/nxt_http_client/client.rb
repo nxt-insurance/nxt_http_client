@@ -14,8 +14,12 @@ module NxtHttpClient
     delegate :before_fire_callback, :after_fire_callback, to: :class
 
     def fire(url = '', **opts, &block)
-      response_handler = build_response_handler(opts[:response_handler], &block)
+      hydra = Thread.current['NxtHttpClient::Hydra'] || Typhoeus::Hydra.new
       request = build_request(url, **opts.except(:response_handler))
+
+      Thread.current["result#{request.object_id}"] = nil
+
+      response_handler = build_response_handler(opts[:response_handler], &block)
       run_before_fire_callback(request, response_handler)
       run_on_headers_callback(request, response_handler)
       run_on_body_callback(request, response_handler)
@@ -29,11 +33,16 @@ module NxtHttpClient
         current_error = error
       ensure
         result = run_after_fire_callback(request, response, result, current_error)
-        result || (raise current_error)
+        Thread.current["result#{request.object_id}"] = result || (raise current_error)
       end
 
-      request.run
-      result
+      hydra.queue(request)
+
+      unless Thread.current['NxtHttpClient::Hydra']
+        hydra.run
+      end
+
+      Thread.current["result#{request.object_id}"]
     end
 
     HTTP_METHODS.each do |method|

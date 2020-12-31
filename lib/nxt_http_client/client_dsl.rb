@@ -37,6 +37,17 @@ module NxtHttpClient
       @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
     end
 
+    def parallel(hydra: Typhoeus::Hydra.new, &block)
+      thread = Thread.new do |t|
+        t['NxtHttpClient::Hydra'] = hydra
+        block.call
+        # we need to map responses to requests somehow
+        hydra.run
+      end
+
+      thread.join
+    end
+
     private
 
     def client_ancestors
