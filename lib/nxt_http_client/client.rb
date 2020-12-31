@@ -17,7 +17,8 @@ module NxtHttpClient
       hydra = Thread.current['NxtHttpClient::Hydra'] || Typhoeus::Hydra.new
       request = build_request(url, **opts.except(:response_handler))
 
-      Thread.current["result#{request.object_id}"] = nil
+      Thread.current['responses'] ||= {}
+
 
       response_handler = build_response_handler(opts[:response_handler], &block)
       run_before_fire_callback(request, response_handler)
@@ -33,7 +34,7 @@ module NxtHttpClient
         current_error = error
       ensure
         result = run_after_fire_callback(request, response, result, current_error)
-        Thread.current["result#{request.object_id}"] = result || (raise current_error)
+        Thread.current['responses'][request] = result || (raise current_error)
       end
 
       hydra.queue(request)
@@ -42,7 +43,7 @@ module NxtHttpClient
         hydra.run
       end
 
-      Thread.current["result#{request.object_id}"]
+      Thread.current['responses'][request]
     end
 
     HTTP_METHODS.each do |method|
