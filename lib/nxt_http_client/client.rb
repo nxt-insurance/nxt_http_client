@@ -11,12 +11,10 @@ module NxtHttpClient
       Typhoeus::Request.new(url, **opts.symbolize_keys)
     end
 
-    delegate :before_fire_callback, :after_fire_callback, to: :class
-
     def fire(url = '', **opts, &block)
       response_handler = build_response_handler(opts[:response_handler], &block)
       request = build_request(url, **opts.except(:response_handler))
-      run_before_fire_callback(request, response_handler)
+      run_before_fire_callbacks(request, response_handler)
       run_on_headers_callback(request, response_handler)
       run_on_body_callback(request, response_handler)
 
@@ -28,7 +26,7 @@ module NxtHttpClient
       rescue StandardError => error
         current_error = error
       ensure
-        result = run_after_fire_callback(request, response, result, current_error)
+        result = run_after_fire_callbacks(request, response, result, current_error)
         result || (raise current_error)
       end
 
@@ -45,7 +43,7 @@ module NxtHttpClient
     private
 
     def build_url(opts, url)
-      base_url = opts.delete(:base_url) || default_config.base_url
+      base_url = opts.delete(:base_url) || config.base_url
       url = [base_url, url].reject(&:blank?).join('/')
 
       url_without_duplicated_hashes(url)
@@ -53,11 +51,11 @@ module NxtHttpClient
     end
 
     def build_headers(opts)
-      opts = default_config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
+      opts = config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
 
-      if default_config.x_request_id_proc
-        opts[:headers][XRequestId] ||= default_config.x_request_id_proc.call
+      if config.x_request_id_proc
+        opts[:headers][XRequestId] ||= config.x_request_id_proc.call
       end
 
       build_cache_header(opts)
@@ -68,8 +66,8 @@ module NxtHttpClient
       self.class.response_handler.dup
     end
 
-    def default_config
-      self.class.default_config
+    def config
+      self.class.config
     end
 
     def build_cache_header(opts)
@@ -108,13 +106,13 @@ module NxtHttpClient
       response_handler
     end
 
-    def run_before_fire_callback(request, response_handler)
-      before_fire_callback && instance_exec(self, request, response_handler, &before_fire_callback)
+    def run_before_fire_callbacks(request, response_handler)
+      callbacks.run(self, :before, self, request, response_handler)
     end
 
-    def run_after_fire_callback(request, response, result, current_error)
-      if after_fire_callback
-        result = instance_exec(self, request, response, result, current_error, &after_fire_callback)
+    def run_after_fire_callbacks(request, response, result, current_error)
+      if callbacks.registry.resolve!(:after).any?
+        result = callbacks.run(self, :after, self, request, response, result, current_error)
       end
 
       result
@@ -134,6 +132,10 @@ module NxtHttpClient
       request.on_body do |response|
         response_handler.eval_callback(self, 'body', response)
       end
+    end
+
+    def callbacks
+      @callbacks ||= self.class.callbacks
     end
   end
 end

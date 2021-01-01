@@ -131,7 +131,7 @@ RSpec.describe NxtHttpClient::Client do
 
     it 'deep merges headers from super classes', :vcr_cassette do
       expect(
-        level_four_client.class.default_config.request_options.with_indifferent_access
+        level_four_client.class.config.request_options.with_indifferent_access
       ).to eq(
         'headers' => expected_request_options
       )
