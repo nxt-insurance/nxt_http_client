@@ -1,17 +1,19 @@
 RSpec.describe NxtHttpClient do
   describe '.parallel', :vcr_cassette do
     let(:client) do
-      Class.new(NxtHttpClient::Client) do
+      klass = Class.new(NxtHttpClient::Client) do
         configure do |config|
           config.base_url = nil
         end
 
         register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
           handler.on(200) do |response|
-            '200 from level four class level'
+            "handled #{response.request.options.fetch(:method)} request in parallel"
           end
         end
-      end.new
+      end
+
+      klass.new
     end
 
     let(:url) { http_stats_url('200') }
@@ -25,7 +27,15 @@ RSpec.describe NxtHttpClient do
         client.delete(url)
       end
 
-      expect(result.values).to match_array(['200 from level four class level'] * 5)
+      expect(result.values).to match_array(
+        [
+          "handled delete request in parallel",
+          "handled get request in parallel",
+          "handled patch request in parallel",
+          "handled post request in parallel",
+          "handled put request in parallel"
+        ]
+      )
     end
   end
 end

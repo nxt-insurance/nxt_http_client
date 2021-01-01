@@ -14,29 +14,28 @@ module NxtHttpClient
     delegate :before_fire_callback, :after_fire_callback, to: :class
 
     def fire(url = '', **opts, &block)
-      hydra = concurrency.hydra
-      request = build_request(url, **opts.except(:response_handler))
+      concurrency.sequential_or_parallel do |hydra|
+        request = build_request(url, **opts.except(:response_handler))
 
-      response_handler = build_response_handler(opts[:response_handler], &block)
-      run_before_fire_callback(request, response_handler)
-      run_on_headers_callback(request, response_handler)
-      run_on_body_callback(request, response_handler)
+        response_handler = build_response_handler(opts[:response_handler], &block)
+        run_before_fire_callback(request, response_handler)
+        run_on_headers_callback(request, response_handler)
+        run_on_body_callback(request, response_handler)
 
-      result = nil
-      current_error = nil
+        result = nil
+        current_error = nil
 
-      request.on_complete do |response|
-        result = callback_or_response(response, response_handler)
-      rescue StandardError => error
-        current_error = error
-      ensure
-        result = run_after_fire_callback(request, response, result, current_error)
-        concurrency.set_response(request, result) || (raise current_error)
+        request.on_complete do |response|
+          result = callback_or_response(response, response_handler)
+        rescue StandardError => error
+          current_error = error
+        ensure
+          result = run_after_fire_callback(request, response, result, current_error)
+          concurrency.set_response(request, result) || (raise current_error)
+        end
+
+        request
       end
-
-      hydra.queue(request)
-      concurrency.run_hydra_if_not_parallel
-      concurrency.get_response(request)
     end
 
     HTTP_METHODS.each do |method|

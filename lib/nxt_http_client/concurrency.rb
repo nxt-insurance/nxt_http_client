@@ -11,17 +11,16 @@ module NxtHttpClient
       end
 
       thread.join
-      thread[RESPONSES]
+      responses(thread)
     end
 
-    def run_hydra_if_not_parallel
-      return if parallel?
+    def sequential_or_parallel(&block)
+      request = block.call(hydra)
+      hydra.queue(request)
+      return request if parallel?
 
       hydra.run
-    end
-
-    def parallel?
-      Thread.current[ID].present?
+      get_response(request)
     end
 
     def set_response(request, response)
@@ -33,22 +32,26 @@ module NxtHttpClient
       responses[request]
     end
 
-    def responses
-      Thread.current[RESPONSES] ||= {}
+    def parallel?
+      Thread.current[ID].present?
+    end
+
+    private
+
+    def responses(thread = Thread.current)
+      thread[RESPONSES] ||= {}
     end
 
     def hydra(**opts)
       @hydra ||= Thread.current[ID] || build_hydra(**opts)
     end
 
-    private
+    def memoize_on_thread(**opts)
+      Thread.current[ID] = build_hydra(**opts)
+    end
 
     def build_hydra(**opts)
       Typhoeus::Hydra.new(**opts)
-    end
-
-    def memoize_on_thread(**opts)
-      Thread.current[ID] = build_hydra(**opts)
     end
   end
 end
