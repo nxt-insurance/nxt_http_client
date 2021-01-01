@@ -25,7 +25,7 @@ RSpec.describe NxtHttpClient do
         client.delete(url)
       end
 
-      expect(result[:responses].values).to match_array(['200 from level four class level'] * 5)
+      expect(result.values).to match_array(['200 from level four class level'] * 5)
     end
   end
 end
