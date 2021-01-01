@@ -1,8 +1,4 @@
 RSpec.describe NxtHttpClient do
-  it 'has a version number' do
-    expect(NxtHttpClient::VERSION).not_to be nil
-  end
-
   context 'http methods', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do

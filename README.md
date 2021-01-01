@@ -5,6 +5,12 @@ The idea is that you can configure your http clients on the class level and then
 request options on the instance level. All http interactions are handled by typhoeus. If you need to 
 access the original `Typhoeus::Request` in your instance, you can do that. 
 
+## ToDo
+- Add proper callbacks
+    - Maybe allow to register callbacks with name 
+    - Do not inherit callbacks but allow to select callbacks from parent
+- Add proper logger
+
 ## Installation
 
 Add this line to your application's Gemfile:
