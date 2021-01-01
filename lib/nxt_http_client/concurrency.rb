@@ -2,16 +2,24 @@ module NxtHttpClient
   class Concurrency
     ID = 'NxtHttpClient::Hydra'
     RESPONSES = 'NxtHttpClient::Hydra::Responses'
+    RESULT_MAP = 'NxtHttpClient::Hydra::ResultMap'
 
     def parallel(**opts, &block)
+      results_need_to_be_mapped = block.arity == 1
+
       thread = Thread.new do
         hydra = memoize_on_thread(**opts)
-        block.call
+        results_need_to_be_mapped ? block.call(result_map) : block.call
         hydra.run
       end
 
       thread.join
-      responses(thread)
+
+      if results_need_to_be_mapped
+        map_results_by_requests(thread)
+      else
+        responses(thread)
+      end
     end
 
     def sequential_or_parallel(&block)
@@ -37,6 +45,20 @@ module NxtHttpClient
     end
 
     private
+
+    def map_results_by_requests(thread)
+      map = result_map(thread).invert
+
+      responses(thread).inject({}) do |acc, (request, response)|
+        key = map.fetch(request)
+        acc[key] = response
+        acc
+      end
+    end
+
+    def result_map(thread = Thread.current)
+      thread[RESULT_MAP] ||= {}
+    end
 
     def responses(thread = Thread.current)
       thread[RESPONSES] ||= {}

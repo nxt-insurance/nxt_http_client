@@ -13,9 +13,7 @@ require 'nxt_http_client/error'
 
 module NxtHttpClient
   def parallel(**opts, &block)
-    Concurrency.new.parallel(**opts) do
-      block.call
-    end
+    Concurrency.new.parallel(**opts, &block)
   end
 
   module_function :parallel
