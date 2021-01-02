@@ -26,7 +26,7 @@ module NxtHttpClient
       end
     end
 
-    def run_after(target: self, request:, response:, result:, error:)
+    def run_after(target:, request:, response:, result:, error:)
       registry.resolve!(:after).inject(result) do |_, callback|
         run_callback(target, callback, *[target, request, response, result, error])
       end
@@ -36,12 +36,13 @@ module NxtHttpClient
       registry.resolve(:after).any?
     end
 
-    def around(type, *args, &execution)
-      around_callbacks = registry.resolve!(:around, type)
-      return execution.call unless around_callbacks.any?
+    def run_around(target:, request:, response_handler:, fire:)
+      around_callbacks = registry.resolve!(:around)
+      return fire.call unless around_callbacks.any?
+      args = *[target, request, response_handler]
 
-      callback_chain = around_callbacks.reverse.inject(execution) do |previous, callback|
-        -> { callback.call(*args, previous) }
+      callback_chain = around_callbacks.reverse.inject(fire) do |previous, callback|
+        -> { target.instance_exec(*args, previous, &callback) }
       end
 
       callback_chain.call

@@ -93,6 +93,20 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_three: request.url }
       end
 
+      around_fire do |client, request, response_handler, fire|
+        log << { level_three: 'around fire 1 before' }
+        result = fire.call
+        log << { level_three: 'around fire 1 after' }
+        result
+      end
+
+      around_fire do |client, request, response_handler, fire|
+        log << { level_three: 'around fire 2 before' }
+        result = fire.call
+        log << { level_three: 'around fire 2 after' }
+        result
+      end
+
       after_fire do |client, request, response, result, error|
         log << { level_three: response.code }
 

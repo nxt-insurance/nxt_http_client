@@ -15,23 +15,27 @@ module NxtHttpClient
       response_handler = build_response_handler(opts[:response_handler], &block)
       request = build_request(url, **opts.except(:response_handler))
       run_before_fire_callbacks(request, response_handler)
-      run_on_headers_callback(request, response_handler)
-      run_on_body_callback(request, response_handler)
 
-      result = nil
-      current_error = nil
+      run_around_fire_callbacks(request, response_handler) do
+        run_on_headers_callback(request, response_handler)
+        run_on_body_callback(request, response_handler)
 
-      request.on_complete do |response|
-        result = callback_or_response(response, response_handler)
-      rescue StandardError => error
-        current_error = error
-      ensure
-        result = run_after_fire_callbacks(request, response, result, current_error)
-        result || (raise current_error)
+        result = nil
+        current_error = nil
+
+        request.on_complete do |response|
+          result = callback_or_response(response, response_handler)
+        rescue StandardError => error
+          current_error = error
+        ensure
+          result = run_after_fire_callbacks(request, response, result, current_error)
+          result || (raise current_error)
+        end
+
+        request.run
+        result
       end
 
-      request.run
-      result
     end
 
     HTTP_METHODS.each do |method|
@@ -108,6 +112,15 @@ module NxtHttpClient
 
     def run_before_fire_callbacks(request, response_handler)
       callbacks.run_before(target: self, request: request, response_handler: response_handler)
+    end
+
+    def run_around_fire_callbacks(request, response_handler, &fire)
+      callbacks.run_around(
+        target: self,
+        request: request,
+        response_handler: response_handler,
+        fire: fire
+      )
     end
 
     def run_after_fire_callbacks(request, response, result, current_error)

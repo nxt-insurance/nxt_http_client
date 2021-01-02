@@ -18,6 +18,10 @@ module NxtHttpClient
       callbacks.register(:after, block)
     end
 
+    def around_fire(&block)
+      callbacks.register(:around, block)
+    end
+
     def config
       @config ||= dup_instance_variable_from_ancestor_chain(:@config) { DefaultConfig.new }
     end
