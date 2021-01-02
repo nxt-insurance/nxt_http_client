@@ -30,16 +30,17 @@ module NxtHttpClient
       @callbacks ||= dup_instance_variable_from_ancestor_chain(:@callbacks) { Callbacks.new }
     end
 
-    def register_response_handler(handler = nil, &block)
+    def response_handler(handler = nil, &block)
+      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+      return @response_handler if handler.nil? && !block_given?
+
       @response_handler = handler
       @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
       @response_handler.configure(&block) if block_given?
       @response_handler
     end
 
-    def response_handler
-      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
-    end
+    alias_method :register_response_handler, :response_handler
 
     def client_ancestors
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }
