@@ -87,6 +87,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
+      clear_fire_callbacks(:before, :after)
+
       before_fire do |client, request, response_handler|
         log << { level_three: request.url }
       end

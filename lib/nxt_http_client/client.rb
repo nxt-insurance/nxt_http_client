@@ -107,15 +107,19 @@ module NxtHttpClient
     end
 
     def run_before_fire_callbacks(request, response_handler)
-      callbacks.run(self, :before, self, request, response_handler)
+      callbacks.run_before(target: self, request: request, response_handler: response_handler)
     end
 
     def run_after_fire_callbacks(request, response, result, current_error)
-      if callbacks.registry.resolve!(:after).any?
-        result = callbacks.run(self, :after, self, request, response, result, current_error)
-      end
+      return result unless callbacks.any_after_callbacks?
 
-      result
+      callbacks.run_after(
+        target: self,
+        request: request,
+        response: response,
+        result: result,
+        error: current_error
+      )
     end
 
     def run_on_headers_callback(request, response_handler)

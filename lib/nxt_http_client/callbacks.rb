@@ -4,7 +4,11 @@ module NxtHttpClient
       @registry = build_registry
     end
 
-    attr_reader :registry
+    def clear(*kinds)
+      Array(kinds).each do |kind|
+        registry.register!(kind, [])
+      end
+    end
 
     def register(kind, callback)
       registry.resolve!(kind) << callback
@@ -14,6 +18,22 @@ module NxtHttpClient
       registry.resolve!(kind).each do |callback|
         run_callback(target, callback, *args)
       end
+    end
+
+    def run_before(target:, request:, response_handler:)
+      registry.resolve!(:before).each do |callback|
+        run_callback(target, callback, *[target, request, response_handler])
+      end
+    end
+
+    def run_after(target: self, request:, response:, result:, error:)
+      registry.resolve!(:after).inject(result) do |_, callback|
+        run_callback(target, callback, *[target, request, response, result, error])
+      end
+    end
+
+    def any_after_callbacks?
+      registry.resolve(:after).any?
     end
 
     def around(type, *args, &execution)
@@ -28,6 +48,8 @@ module NxtHttpClient
     end
 
     private
+
+    attr_reader :registry
 
     def run_callback(target, callback, *args)
       args = args.take(callback.arity)

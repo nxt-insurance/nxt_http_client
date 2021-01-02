@@ -6,6 +6,10 @@ module NxtHttpClient
       config
     end
 
+    def clear_fire_callbacks(*kinds)
+      callbacks.clear(*kinds)
+    end
+
     def before_fire(&block)
       callbacks.register(:before, block)
     end
