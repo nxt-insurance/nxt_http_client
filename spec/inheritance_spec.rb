@@ -97,6 +97,7 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_three: 'around fire 1 before' }
         result = fire.call
         log << { level_three: 'around fire 1 after' }
+
         result
       end
 
@@ -104,6 +105,7 @@ RSpec.describe NxtHttpClient::Client do
         log << { level_three: 'around fire 2 before' }
         result = fire.call
         log << { level_three: 'around fire 2 after' }
+
         result
       end
 
@@ -194,12 +196,21 @@ RSpec.describe NxtHttpClient::Client do
     let(:level_two_client) { level_two.new }
     let(:level_three_client) { level_three.new }
 
-    it 'calls the correct callback', :vcr_cassette do
+    it 'calls the correct callbacks', :vcr_cassette do
       expect { level_two_client.call('401') }.to change { level_two_client.log }
-      expect(level_two_client.log.first).to eq(level_one: "httpstat.us/401")
+      expect(level_two_client.log).to eq(
+        [{ :level_one => 'httpstat.us/401' }, { :level_one => 401 }]
+      )
 
       expect { level_three_client.call('200') }.to change { level_three_client.log }
-      expect(level_three_client.log.first).to eq(level_three: "httpstat.us/200")
+      expect(level_three_client.log).to eq([
+        { :level_three => "httpstat.us/200" },
+        { :level_three => "around fire 1 before" },
+        { :level_three => "around fire 2 before" },
+        { :level_three => "around fire 2 after" },
+        { :level_three => "around fire 1 after" },
+        { :level_three => 200 }
+      ])
     end
   end
 
@@ -207,7 +218,7 @@ RSpec.describe NxtHttpClient::Client do
     let(:level_two_client) { level_two.new }
     let(:level_three_client) { level_three.new }
 
-    it 'calls the correct callback', :vcr_cassette do
+    it 'calls the correct callbacks', :vcr_cassette do
       expect { level_two_client.call('401') }.to change { level_two_client.log }
       expect(level_two_client.log.last).to eq(level_one: 401)
 

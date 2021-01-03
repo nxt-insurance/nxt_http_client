@@ -15,27 +15,25 @@ module NxtHttpClient
       response_handler = build_response_handler(opts[:response_handler], &block)
       request = build_request(url, **opts.except(:response_handler))
       run_before_fire_callbacks(request, response_handler)
+      run_on_headers_callback(request, response_handler)
+      run_on_body_callback(request, response_handler)
 
-      run_around_fire_callbacks(request, response_handler) do
-        run_on_headers_callback(request, response_handler)
-        run_on_body_callback(request, response_handler)
+      result = nil
+      current_error = nil
 
-        result = nil
-        current_error = nil
-
-        request.on_complete do |response|
+      request.on_complete do |response|
+        run_around_fire_callbacks(request, response_handler) do
           result = callback_or_response(response, response_handler)
-        rescue StandardError => error
-          current_error = error
-        ensure
-          result = run_after_fire_callbacks(request, response, result, current_error)
-          result || (raise current_error)
         end
-
-        request.run
-        result
+      rescue StandardError => error
+        current_error = error
+      ensure
+        result = run_after_fire_callbacks(request, response, result, current_error)
+        result || (raise current_error)
       end
 
+      request.run
+      result
     end
 
     HTTP_METHODS.each do |method|
@@ -79,13 +77,13 @@ module NxtHttpClient
         strategy = opts.delete(:cache)
 
         case strategy.to_s
-        when 'thread'
-          cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
-          opts[:headers].reverse_merge!(cache_key: cache_key)
-        when 'global'
-          opts[:headers].delete(:cache_key)
-        else
-          raise ArgumentError, "Cache strategy unknown: #{strategy}. Options are #{CACHE_STRATEGIES}"
+          when 'thread'
+            cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
+            opts[:headers].reverse_merge!(cache_key: cache_key)
+          when 'global'
+            opts[:headers].delete(:cache_key)
+          else
+            raise ArgumentError, "Cache strategy unknown: #{strategy}. Options are #{CACHE_STRATEGIES}"
         end
       end
     end
