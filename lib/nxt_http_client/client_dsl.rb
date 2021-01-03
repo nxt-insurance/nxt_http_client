@@ -43,17 +43,19 @@ module NxtHttpClient
 
     alias_method :response_handler, :response_handler
 
+    private
+
     def client_ancestors
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }
     end
 
-    def option_from_ancestors(instance_variable_name)
-      client = client_ancestors.find { |c| c.instance_variable_get(instance_variable_name) }
-      client && client.instance_variable_get(instance_variable_name)
+    def option_from_ancestors(name)
+      client = client_ancestors.find { |c| c.instance_variable_get(name) }
+      client && client.instance_variable_get(name)
     end
 
-    def dup_option_from_ancestor(instance_variable_name)
-      result = option_from_ancestors(instance_variable_name).dup
+    def dup_option_from_ancestor(name)
+      result = option_from_ancestors(name).dup
       return result unless block_given?
 
       result || yield
