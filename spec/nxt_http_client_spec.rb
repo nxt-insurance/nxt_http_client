@@ -10,7 +10,7 @@ RSpec.describe NxtHttpClient do
           config.base_url = nil
         end
 
-        register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
+        response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
           handler.on(200) do |response|
             '200 from level four class level'
           end

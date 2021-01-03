@@ -7,7 +7,7 @@ RSpec.describe NxtHttpClient::Client do
         config.request_options = { method: :get }
       end
 
-      register_response_handler do |handler|
+      response_handler do |handler|
         handler.on(200) do |response|
           response.request.original_options.symbolize_keys
         end

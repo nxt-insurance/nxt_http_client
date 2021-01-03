@@ -32,15 +32,12 @@ module NxtHttpClient
 
     def response_handler(handler = nil, &block)
       @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
-      return @response_handler if handler.nil? && !block_given?
-
-      @response_handler = handler
-      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+      @response_handler = handler if handler.present?
       @response_handler.configure(&block) if block_given?
       @response_handler
     end
 
-    alias_method :register_response_handler, :response_handler
+    alias_method :response_handler, :response_handler
 
     def client_ancestors
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }

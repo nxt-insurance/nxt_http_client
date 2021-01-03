@@ -19,7 +19,7 @@ RSpec.describe NxtHttpClient::Error do
   context 'when initialized with a real response' do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_response_handler do |handler|
+        response_handler do |handler|
           handler.on(:error) do |response|
             NxtHttpClient::Error.new(response)
           end
@@ -61,7 +61,7 @@ RSpec.describe NxtHttpClient::Error do
     context 'when the response contains invalid json' do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:success) do |response|
               response.define_singleton_method :body do
                 'broken json'
@@ -81,7 +81,7 @@ RSpec.describe NxtHttpClient::Error do
     context 'when the response is valid json' do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:success) do |response|
               NxtHttpClient::Error.new(response)
             end

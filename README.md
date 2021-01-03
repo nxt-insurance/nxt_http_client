@@ -49,7 +49,7 @@ class MyClient < NxtHttpClient
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
-  register_response_handler do |handler|
+  response_handler do |handler|
     handler.on(:error) do |response|
       Raven.extra_context(error_details: error.to_h) # call error.to_h to inspect request and response
       raise StandardError, "I can't handle this: #{response.code}"
@@ -143,7 +143,7 @@ end
 Register default request options on the class level. Available options are `request_options` that are passed directly to 
 the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`. 
 
-### register_response_handler
+### response_handler
 
 Register a default response handler for your client class. 
 You can reconfigure or overwrite it this completely later on the instance level. 

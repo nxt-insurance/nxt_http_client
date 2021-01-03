@@ -15,7 +15,7 @@ RSpec.describe NxtHttpClient::Client do
   context 'when caching was switched on' do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_response_handler do |handler|
+        response_handler do |handler|
           handler.on(200) do |response|
             response
           end
@@ -41,7 +41,7 @@ RSpec.describe NxtHttpClient::Client do
   context 'is switched off per default' do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_response_handler do |handler|
+        response_handler do |handler|
           handler.on(200) do |response|
             response
           end
