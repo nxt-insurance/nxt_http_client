@@ -27,7 +27,7 @@ module NxtHttpClient
     end
 
     def callbacks
-      @callbacks ||= dup_instance_variable_from_ancestor_chain(:@callbacks) { Callbacks.new }
+      @callbacks ||= dup_instance_variable_from_ancestor_chain(:@callbacks) { FireCallbacks.new }
     end
 
     def response_handler(handler = nil, &block)

@@ -1,13 +1,11 @@
 module NxtHttpClient
-  class Callbacks
+  class FireCallbacks
     def initialize
       @registry = build_registry
     end
 
     def clear(*kinds)
-      Array(kinds).each do |kind|
-        registry.register!(kind, [])
-      end
+      Array(kinds).each { |kind| registry.register!(kind, []) }
     end
 
     def register(kind, callback)
@@ -39,8 +37,8 @@ module NxtHttpClient
     def run_around(target:, request:, response_handler:, fire:)
       around_callbacks = registry.resolve!(:around)
       return fire.call unless around_callbacks.any?
-      args = *[target, request, response_handler]
 
+      args = *[target, request, response_handler]
       callback_chain = around_callbacks.reverse.inject(fire) do |previous, callback|
         -> { target.instance_exec(*args, previous, &callback) }
       end

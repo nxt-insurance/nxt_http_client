@@ -1,0 +1,23 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: http://www.f193a3d484c97517369fa15e6e586b44.com/
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 0
+      message: null
+    headers: {}
+    body:
+      encoding: UTF-8
+      string: ''
+  recorded_at: Sun, 03 Jan 2021 09:41:54 GMT
+recorded_with: VCR 6.0.0
