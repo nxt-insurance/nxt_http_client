@@ -30,9 +30,13 @@ module NxtHttpClient
       @callbacks ||= dup_instance_variable_from_ancestor_chain(:@callbacks) { FireCallbacks.new }
     end
 
-    def response_handler(handler = nil, &block)
-      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
-      @response_handler = handler if handler.present?
+    def response_handler(handler = Undefined.new, &block)
+      if undefined?(handler)
+        @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+      else
+        @response_handler = handler
+      end
+
       @response_handler.configure(&block) if block_given?
       @response_handler
     end
@@ -54,6 +58,10 @@ module NxtHttpClient
       return result unless block_given?
 
       result || yield
+    end
+
+    def undefined?(value)
+      value.is_a?(Undefined)
     end
   end
 end
