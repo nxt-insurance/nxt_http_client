@@ -23,16 +23,16 @@ module NxtHttpClient
     end
 
     def config
-      @config ||= dup_instance_variable_from_ancestor_chain(:@config) { DefaultConfig.new }
+      @config ||= dup_option_from_ancestor(:@config) { DefaultConfig.new }
     end
 
     def callbacks
-      @callbacks ||= dup_instance_variable_from_ancestor_chain(:@callbacks) { FireCallbacks.new }
+      @callbacks ||= dup_option_from_ancestor(:@callbacks) { FireCallbacks.new }
     end
 
     def response_handler(handler = Undefined.new, &block)
       if undefined?(handler)
-        @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+        @response_handler ||= dup_option_from_ancestor(:@response_handler) { NxtHttpClient::ResponseHandler.new }
       else
         @response_handler = handler
       end
@@ -47,14 +47,13 @@ module NxtHttpClient
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }
     end
 
-    def instance_variable_from_ancestor_chain(instance_variable_name)
+    def option_from_ancestors(instance_variable_name)
       client = client_ancestors.find { |c| c.instance_variable_get(instance_variable_name) }
-
-      client.instance_variable_get(instance_variable_name)
+      client && client.instance_variable_get(instance_variable_name)
     end
 
-    def dup_instance_variable_from_ancestor_chain(instance_variable_name)
-      result = instance_variable_from_ancestor_chain(instance_variable_name).dup
+    def dup_option_from_ancestor(instance_variable_name)
+      result = option_from_ancestors(instance_variable_name).dup
       return result unless block_given?
 
       result || yield
