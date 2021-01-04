@@ -14,25 +14,28 @@ module NxtHttpClient
     def fire(url = '', **opts, &block)
       response_handler = build_response_handler(opts[:response_handler], &block)
       request = build_request(url, **opts.except(:response_handler))
-      run_before_fire_callbacks(request, response_handler)
-      run_on_headers_callback(request, response_handler)
-      run_on_body_callback(request, response_handler)
 
-      result = nil
       current_error = nil
+      result = nil
+
+      setup_on_headers_callback(request, response_handler)
+      setup_on_body_callback(request, response_handler)
 
       request.on_complete do |response|
-        run_around_fire_callbacks(request, response_handler) do
-          result = callback_or_response(response, response_handler)
-        end
-      rescue StandardError => error
-        current_error = error
-      ensure
-        result = run_after_fire_callbacks(request, response, result, current_error)
-        result || (raise current_error)
+        result = callback_or_response(response, response_handler)
       end
 
-      request.run
+      run_before_fire_callbacks(request, response_handler)
+
+      run_around_fire_callbacks(request, response_handler) do
+        request.run
+      rescue StandardError => error
+        current_error = error
+      end
+
+      result = run_after_fire_callbacks(request, request.response, result, current_error)
+      result || (raise current_error if current_error)
+
       result
     end
 
@@ -133,7 +136,7 @@ module NxtHttpClient
       )
     end
 
-    def run_on_headers_callback(request, response_handler)
+    def setup_on_headers_callback(request, response_handler)
       return unless response_handler.callbacks.resolve('headers')
 
       request.on_headers do |response|
@@ -141,7 +144,7 @@ module NxtHttpClient
       end
     end
 
-    def run_on_body_callback(request, response_handler)
+    def setup_on_body_callback(request, response_handler)
       return unless response_handler.callbacks.resolve('body')
 
       request.on_body do |response|
