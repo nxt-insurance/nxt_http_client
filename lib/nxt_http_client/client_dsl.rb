@@ -6,6 +6,23 @@ module NxtHttpClient
       config
     end
 
+    def logger=(proc)
+      logger = Logging.new(proc)
+
+      around_fire do |client, request, response_handler, fire|
+        logger.call(client, request, response_handler, fire)
+      end
+    end
+
+    def logger_with(&block)
+      logger = Logging.new(block)
+
+      around_fire do |client, request, response_handler, fire|
+        args = [client, request, response_handler, fire]
+        client.instance_exec(*args, &logger)
+      end
+    end
+
     def clear_fire_callbacks(*kinds)
       callbacks.clear(*kinds)
     end
@@ -23,7 +40,7 @@ module NxtHttpClient
     end
 
     def config
-      @config ||= dup_option_from_ancestor(:@config) { DefaultConfig.new }
+      @config ||= dup_option_from_ancestor(:@config) { Config.new }
     end
 
     def callbacks

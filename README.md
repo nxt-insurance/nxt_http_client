@@ -49,6 +49,10 @@ class MyClient < NxtHttpClient
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
+  logger = ->(info) do
+    Rails.logger.info(info.to_h)
+  end
+  
   response_handler do |handler|
     handler.on(:error) do |response|
       Raven.extra_context(error_details: error.to_h) # call error.to_h to inspect request and response
