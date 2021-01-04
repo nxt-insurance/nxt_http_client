@@ -3,7 +3,7 @@ require 'typhoeus'
 require 'nxt_registry'
 
 require 'nxt_http_client/version'
-require 'nxt_http_client/x_request_id'
+require 'nxt_http_client/headers'
 require 'nxt_http_client/response_handler'
 require 'nxt_http_client/undefined'
 require 'nxt_http_client/config'
