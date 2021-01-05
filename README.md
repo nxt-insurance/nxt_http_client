@@ -1,15 +1,9 @@
 # NxtHttpClient
 
-Build http clients with ease. NxtHttpClient is a simple DSL on top of the awesome typhoeus gem.
-The idea is that you can configure your http clients on the class level and then adjust or further configure
-request options on the instance level. All http interactions are handled by typhoeus. If you need to 
-access the original `Typhoeus::Request` in your instance, you can do that. 
+Build http clients with ease. NxtHttpClient is a simple DSL on top of the awesome [typhoeus](https://github.com/typhoeus/typhoeus)
+gem. Configure your http clients on the class level and then adjust them on a request options on the instance level if necessary.
+All http interactions are handled by [typhoeus](https://github.com/typhoeus/typhoeus). If you need to access the original `Typhoeus::Request` in your instance, you can do that. 
 
-## ToDo
-- Add proper callbacks
-    - Maybe allow to register callbacks with name 
-    - Do not inherit callbacks but allow to select callbacks from parent
-- Add proper logger
 
 ## Installation
 
@@ -49,8 +43,8 @@ class MyClient < NxtHttpClient
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
-  logger = ->(info) do
-    Rails.logger.info(info.to_h)
+  log do |info|
+    Rails.logger.info(info)
   end
   
   response_handler do |handler|
