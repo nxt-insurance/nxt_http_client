@@ -9,10 +9,11 @@ module NxtHttpClient
     def log(&block)
       @logger ||= dup_option_from_ancestor(:@logger) { block }
 
-      if @logger.present?
-        around_fire do |client, request, response_handler, fire|
-          Logger.new(block).call(client, request, response_handler, fire)
-        end
+      return unless @logger.present?
+      logger = @logger
+
+      around_fire do |client, request, response_handler, fire|
+        Logger.new(logger).call(client, request, response_handler, fire)
       end
     end
 
