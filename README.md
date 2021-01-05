@@ -24,9 +24,9 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
-class ApplicationFetcher < Client
+class UserFetcher < Client
   def initialize(id)
-    @url = ".../applications/#{id}"
+    @url = ".../users/#{id}"
   end
 
   def call

@@ -4,10 +4,6 @@ module NxtHttpClient
       @logger = logger
     end
 
-    def to_proc
-      method(:call)
-    end
-
     def call(client, request, _response_handler, fire)
       started_at = now
       error = nil
