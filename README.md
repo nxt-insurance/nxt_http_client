@@ -24,6 +24,27 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
+class ApplicationFetcher < Client
+  def initialize(id)
+    @url = ".../applications/#{id}"
+  end
+
+  def call
+    get(url) do |response_handler|
+      response_handler.on(:success) do |response|
+        JSON(response.body)
+      end
+    end
+  end
+  
+  private
+
+  attr_reader :url
+end
+```
+
+
+```ruby
 class MyClient < NxtHttpClient
   
   # In your subclasses you probably want to deep_merge options in order to not overwrite options inherited 
