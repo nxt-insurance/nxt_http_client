@@ -9,14 +9,15 @@ module NxtHttpClient
     end
 
     def call(client, request, _response_handler, fire)
-      options = {
-        client: client,
-        started_at: now,
-        request: request
-      }
-
+      started_at = now
       error = nil
       result = nil
+
+      options = {
+        client: client,
+        started_at: started_at,
+        request: request
+      }
 
       begin
         result = fire.call
@@ -24,8 +25,10 @@ module NxtHttpClient
         error = e
         options.merge!(error: e)
       ensure
+        finished_at = now
         options.merge!(
           finished_at: now,
+          elapsed_time_in_milliseconds: finished_at - started_at,
           response: request.response,
           http_status: request.response&.code
         )

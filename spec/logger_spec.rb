@@ -27,10 +27,7 @@ RSpec.describe NxtHttpClient::Logger do
 
   before do
     Timecop.freeze(now) do
-      client.get('200')
-      client.get('200')
-      client.get('200')
-      client.get('200')
+      4.times { client.get('200') }
     end
   end
 
@@ -44,7 +41,8 @@ RSpec.describe NxtHttpClient::Logger do
         request: be_a(Typhoeus::Request),
         response: be_a(Typhoeus::Response),
         finished_at: now.to_i * 1000,
-        http_status: 200
+        http_status: 200,
+        elapsed_time_in_milliseconds: 0
       )
     )
   end
