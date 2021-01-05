@@ -1,5 +1,5 @@
 module NxtHttpClient
-  class Logging
+  class Logger
     def initialize(logger)
       @logger = logger
     end
@@ -12,8 +12,7 @@ module NxtHttpClient
       options = {
         client: client,
         started_at: now,
-        request: request,
-        response: request.response
+        request: request
       }
 
       error = nil
@@ -27,6 +26,7 @@ module NxtHttpClient
       ensure
         options.merge!(
           finished_at: now,
+          response: request.response,
           http_status: request.response&.code
         )
       end

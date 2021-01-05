@@ -5,6 +5,7 @@ require 'nxt_http_client'
 require 'pry'
 require 'redis'
 require 'typhoeus/cache/redis'
+require 'timecop'
 
 require 'webmock/rspec'
 WebMock.disable_net_connect!(allow_localhost: true)
