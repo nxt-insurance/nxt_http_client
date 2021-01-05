@@ -1,3 +1,9 @@
+# v0.3.4 2021-01-05
+
+### Updated
+
+- Loosen ActiveSupport version requirement to allow 6.1
+
 # v0.3.3 2020-09-30
 
 ### Updated NxtRegistry
