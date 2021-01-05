@@ -6,11 +6,11 @@ module NxtHttpClient
       config
     end
 
-    def logger=(proc)
-      logger = Logger.new(proc)
+    def log(&block)
+      @logger = block
 
       around_fire do |client, request, response_handler, fire|
-        logger.call(client, request, response_handler, fire)
+        Logger.new(block).call(client, request, response_handler, fire)
       end
     end
 

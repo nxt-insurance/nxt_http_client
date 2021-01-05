@@ -16,7 +16,9 @@ RSpec.describe NxtHttpClient::Logger do
         end
       end
 
-      self.logger = -> (info) { LOG << info.to_h }
+      log do |info|
+        LOG << info.to_h
+      end
     end
   end
 
