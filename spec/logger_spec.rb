@@ -1,8 +1,6 @@
 RSpec.describe NxtHttpClient::Logger do
-  let(:test_class) do
+  let(:level_one) do
     Class.new(NxtHttpClient::Client) do
-      LOG = []
-
       configure do |config|
         config.base_url = 'httpstat.us'
         config.request_options = {
@@ -16,13 +14,19 @@ RSpec.describe NxtHttpClient::Logger do
         end
       end
 
+      def self.logs
+        @logs ||= {}
+        @logs[name] ||= []
+        @logs[name]
+      end
+
       log do |info|
-        LOG << info.to_h
+        logs << info.to_h
       end
     end
   end
 
-  let(:client) { test_class.new }
+  let(:client) { level_one.new }
   let(:now) { Time.current }
 
   before do
@@ -32,11 +36,11 @@ RSpec.describe NxtHttpClient::Logger do
   end
 
   it 'logs', :vcr_cassette do
-    expect(LOG.count). to eq(4)
+    expect(level_one.logs.count). to eq(4)
 
-    expect(LOG).to all(
+    expect(level_one.logs).to all(
       match(
-        client: be_a(test_class),
+        client: be_a(level_one),
         started_at: now.to_i * 1000,
         request: be_a(Typhoeus::Request),
         response: be_a(Typhoeus::Response),
@@ -45,5 +49,37 @@ RSpec.describe NxtHttpClient::Logger do
         elapsed_time_in_milliseconds: 0
       )
     )
+  end
+
+  context 'inheritance' do
+    let(:level_two) do
+      Class.new(level_one)
+    end
+
+    let(:level_three) do
+      Class.new(level_two) do
+        def self.logs
+          @logs ||= []
+        end
+
+        log do |_|
+          logs << '*'
+        end
+      end
+    end
+
+    context 'when logger is inherited', :vcr_cassette do
+
+      it 'logs with the inherited logger' do
+        expect { 2.times { level_two.new.get('200') } }.to change { level_one.logs.size }.by(2)
+      end
+    end
+
+    context 'when logger is redefined', :vcr_cassette do
+      it 'logs with the own logger' do
+        expect { 2.times { level_three.new.get('200') } }.to change { level_three.logs.size }.by(2)
+        expect(level_three.logs).to eq(%w[* *])
+      end
+    end
   end
 end

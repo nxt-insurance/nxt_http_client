@@ -7,7 +7,7 @@ module NxtHttpClient
     end
 
     def log(&block)
-      @logger ||= dup_option_from_ancestor(:@logger) { block }
+      @logger ||= block || dup_option_from_ancestor(:@logger)
 
       return unless @logger.present?
       logger = @logger
