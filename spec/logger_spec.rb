@@ -12,6 +12,10 @@ RSpec.describe NxtHttpClient::Logger do
         handler.on(:success) do |response|
           "#{response}"
         end
+
+        handler.on(:error) do |response|
+          raise NxtHttpClient::Error.new(response)
+        end
       end
 
       def self.logs
@@ -69,7 +73,6 @@ RSpec.describe NxtHttpClient::Logger do
     end
 
     context 'when logger is inherited', :vcr_cassette do
-
       it 'logs with the inherited logger' do
         expect { 2.times { level_two.new.get('200') } }.to change { level_one.logs.size }.by(2)
       end
@@ -80,6 +83,19 @@ RSpec.describe NxtHttpClient::Logger do
         expect { 2.times { level_three.new.get('200') } }.to change { level_three.logs.size }.by(2)
         expect(level_three.logs).to eq(%w[* *])
       end
+    end
+  end
+
+  let(:http_status) { 503 }
+  let(:log_size) { client.class.logs.count }
+
+  context 'when the request errors' do
+    before { log_size }
+
+    it 'does log the errored request', :vcr_cassette do
+      expect { client.get(http_status) }.to raise_error(NxtHttpClient::Error)
+      expect(client.class.logs.count).to eq(log_size + 1 )
+      expect(client.class.logs.last[:http_status]).to eq(http_status)
     end
   end
 end
