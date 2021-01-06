@@ -2,7 +2,8 @@
 
 Build http clients with ease. NxtHttpClient is a simple DSL on top of the awesome [typhoeus](https://github.com/typhoeus/typhoeus)
 gem. Configure your http clients on the class level and then adjust them on a request options on the instance level if necessary.
-All http interactions are handled by [typhoeus](https://github.com/typhoeus/typhoeus). If you need to access the original `Typhoeus::Request` in your instance, you can do that. 
+All http interactions are handled by [typhoeus](https://github.com/typhoeus/typhoeus). NxtHttpClient is just a simple 
+layer on top of typhoeus and allows to access and configure the original `Typhoeus::Request` before making a request.  
 
 
 ## Installation
