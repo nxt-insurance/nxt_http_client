@@ -216,6 +216,31 @@ end
 }
 ```
 
+### Caching
+
+Typhoeus ships with caching built in. Checkout the [typhoeus](https://github.com/typhoeus/typhoeus) docu to figure out 
+how to set it up. NxtHttpClient builds some functionality on top of this and offer to cache requests within the current 
+thread or globally. You can simply make use of it by providing one of the caching options `:thread` or`:global` as config 
+request option or the actual request options when building the request. 
+
+```ruby
+class Client < NxtHttpClient::Client
+  configure do |config|
+    config.request_options = { cache: :thread }
+  end
+  
+  response_handler do |handler|
+    handler.on(200) do |response|
+      # ...
+    end
+  end
+  
+  def call
+    get('.../url.com', cache: :thread) # configure caching per request level
+  end
+end
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
