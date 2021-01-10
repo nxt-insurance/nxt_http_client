@@ -1,3 +1,12 @@
+# v1.0.0 2021-01-10
+
+### Breaking changes
+- renamed register_response_handler to _response_handler
+- replace before_fire and after_fire hooks with proper callbacks before, after and around fire
+
+### Updated
+- error now includes more information about request and headers
+
 # v0.3.4 2021-01-05
 
 ### Updated
