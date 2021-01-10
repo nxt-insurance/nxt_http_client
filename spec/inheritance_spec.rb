@@ -14,7 +14,7 @@ RSpec.describe NxtHttpClient::Client do
         }
       end
 
-      register_response_handler do |handler|
+      response_handler do |handler|
         handler.on(200) do |response|
           '200 from level one class level'
         end
@@ -37,7 +37,7 @@ RSpec.describe NxtHttpClient::Client do
 
   let(:level_two) do
     Class.new(level_one) do
-      register_response_handler do |handler|
+      response_handler do |handler|
         handler.on(201) do |response|
           '201 from level one class level'
         end
@@ -87,8 +87,26 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
+      clear_fire_callbacks(:before, :after)
+
       before_fire do |client, request, response_handler|
         log << { level_three: request.url }
+      end
+
+      around_fire do |client, request, response_handler, fire|
+        log << { level_three: 'around fire 1 before' }
+        result = fire.call
+        log << { level_three: 'around fire 1 after' }
+
+        result
+      end
+
+      around_fire do |client, request, response_handler, fire|
+        log << { level_three: 'around fire 2 before' }
+        result = fire.call
+        log << { level_three: 'around fire 2 after' }
+
+        result
       end
 
       after_fire do |client, request, response, result, error|
@@ -111,7 +129,7 @@ RSpec.describe NxtHttpClient::Client do
         config.x_request_id_proc = -> { 'my id' }
       end
 
-      register_response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
+      response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
         handler.on(200) do |response|
           '200 from level four class level'
         end
@@ -131,7 +149,7 @@ RSpec.describe NxtHttpClient::Client do
 
     it 'deep merges headers from super classes', :vcr_cassette do
       expect(
-        level_four_client.class.default_config.request_options.with_indifferent_access
+        level_four_client.class.config.request_options.with_indifferent_access
       ).to eq(
         'headers' => expected_request_options
       )
@@ -178,12 +196,21 @@ RSpec.describe NxtHttpClient::Client do
     let(:level_two_client) { level_two.new }
     let(:level_three_client) { level_three.new }
 
-    it 'calls the correct callback', :vcr_cassette do
+    it 'calls the correct callbacks', :vcr_cassette do
       expect { level_two_client.call('401') }.to change { level_two_client.log }
-      expect(level_two_client.log.first).to eq(level_one: "httpstat.us/401")
+      expect(level_two_client.log).to eq(
+        [{ :level_one => 'httpstat.us/401' }, { :level_one => 401 }]
+      )
 
       expect { level_three_client.call('200') }.to change { level_three_client.log }
-      expect(level_three_client.log.first).to eq(level_three: "httpstat.us/200")
+      expect(level_three_client.log).to eq([
+        { :level_three => "httpstat.us/200" },
+        { :level_three => "around fire 1 before" },
+        { :level_three => "around fire 2 before" },
+        { :level_three => "around fire 2 after" },
+        { :level_three => "around fire 1 after" },
+        { :level_three => 200 }
+      ])
     end
   end
 
@@ -191,7 +218,7 @@ RSpec.describe NxtHttpClient::Client do
     let(:level_two_client) { level_two.new }
     let(:level_three_client) { level_three.new }
 
-    it 'calls the correct callback', :vcr_cassette do
+    it 'calls the correct callbacks', :vcr_cassette do
       expect { level_two_client.call('401') }.to change { level_two_client.log }
       expect(level_two_client.log.last).to eq(level_one: 401)
 

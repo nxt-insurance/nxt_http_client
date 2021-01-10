@@ -1,57 +1,79 @@
 module NxtHttpClient
   module ClientDsl
     def configure(opts = {}, &block)
-      opts.each { |k, v| default_config.send(k, v) }
-      default_config.tap { |d| block.call(d) }
-      default_config
+      opts.each { |k, v| config.send(k, v) }
+      config.tap { |d| block.call(d) }
+      config
+    end
+
+    def log(&block)
+      @logger ||= block || dup_option_from_ancestor(:@logger)
+
+      return unless @logger.present?
+      logger = @logger
+
+      around_fire do |client, request, response_handler, fire|
+        Logger.new(logger).call(client, request, response_handler, fire)
+      end
+    end
+
+    def clear_fire_callbacks(*kinds)
+      callbacks.clear(*kinds)
     end
 
     def before_fire(&block)
-      @before_fire_callback = block
-    end
-
-    def before_fire_callback
-      @before_fire_callback ||= dup_instance_variable_from_ancestor_chain(:@before_fire_callback)
+      callbacks.register(:before, block)
     end
 
     def after_fire(&block)
-      @after_fire_callback = block
+      callbacks.register(:after, block)
     end
 
-    def after_fire_callback
-      @after_fire_callback ||= dup_instance_variable_from_ancestor_chain(:@after_fire_callback)
+    def around_fire(&block)
+      callbacks.register(:around, block)
     end
 
-    def default_config
-      @default_config ||= dup_instance_variable_from_ancestor_chain(:@default_config) { DefaultConfig.new }
+    def config
+      @config ||= dup_option_from_ancestor(:@config) { Config.new }
     end
 
-    def register_response_handler(handler = nil, &block)
-      @response_handler = handler
-      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+    def callbacks
+      @callbacks ||= dup_option_from_ancestor(:@callbacks) { FireCallbacks.new }
+    end
+
+    def response_handler(handler = Undefined.new, &block)
+      if undefined?(handler)
+        @response_handler ||= dup_option_from_ancestor(:@response_handler) { NxtHttpClient::ResponseHandler.new }
+      else
+        @response_handler = handler
+      end
+
       @response_handler.configure(&block) if block_given?
       @response_handler
     end
 
-    def response_handler
-      @response_handler ||= dup_instance_variable_from_ancestor_chain(:@response_handler) { NxtHttpClient::ResponseHandler.new }
-    end
+    alias_method :response_handler, :response_handler
+
+    private
 
     def client_ancestors
       ancestors.select { |ancestor| ancestor <= NxtHttpClient::Client }
     end
 
-    def instance_variable_from_ancestor_chain(instance_variable_name)
-      client = client_ancestors.find { |c| c.instance_variable_get(instance_variable_name) }
-
-      client.instance_variable_get(instance_variable_name)
+    def option_from_ancestors(name)
+      client = client_ancestors.find { |c| c.instance_variable_get(name) }
+      client && client.instance_variable_get(name)
     end
 
-    def dup_instance_variable_from_ancestor_chain(instance_variable_name)
-      result = instance_variable_from_ancestor_chain(instance_variable_name).dup
+    def dup_option_from_ancestor(name)
+      result = option_from_ancestors(name).dup
       return result unless block_given?
 
       result || yield
+    end
+
+    def undefined?(value)
+      value.is_a?(Undefined)
     end
   end
 end

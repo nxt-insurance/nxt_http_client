@@ -6,7 +6,7 @@ RSpec.describe NxtHttpClient::Client do
           config.request_options = { followlocation: true }
         end
 
-        register_response_handler do |handler|
+        response_handler do |handler|
           handler.on(200) do |response|
             response.body
           end
@@ -26,7 +26,7 @@ RSpec.describe NxtHttpClient::Client do
   context 'when the callback is overwritten in the instance', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
-        register_response_handler do |handler|
+        response_handler do |handler|
           handler.on(200) do |response|
             raise StandardError, 'This should not happen!'
           end
@@ -59,7 +59,7 @@ RSpec.describe NxtHttpClient::Client do
     context ':success', :vcr_cassette do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:success) do |response|
               response.body
             end
@@ -79,7 +79,7 @@ RSpec.describe NxtHttpClient::Client do
             'Test Client'
           end
 
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:error) do |response|
               raise NxtHttpClient::Error.new(response, "#{self.class.name} => Response not successful")
             end
@@ -103,7 +103,7 @@ RSpec.describe NxtHttpClient::Client do
 
           attr_accessor :headers
 
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:headers) do |response|
               self.headers = response.headers
             end
@@ -125,7 +125,7 @@ RSpec.describe NxtHttpClient::Client do
 
           attr_accessor :chunks
 
-          register_response_handler do |handler|
+          response_handler do |handler|
             handler.on(:body) do |chunk|
               chunks << 'body'
             end

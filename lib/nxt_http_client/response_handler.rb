@@ -10,8 +10,6 @@ module NxtHttpClient
     attr_accessor :result
 
     def eval_callback(target, key, response)
-      return unless callbacks.resolve!(key)
-
       target.instance_exec(response, &callbacks.resolve(key))
     end
 
@@ -20,6 +18,8 @@ module NxtHttpClient
     end
 
     def register_callback(code, overwrite: false, &block)
+      code = regex_or_code(code)
+
       if overwrite
         callbacks.register!(code, block)
       else
@@ -36,14 +36,10 @@ module NxtHttpClient
 
     def callback_for_response(response)
       key_from_response = response.code.to_s
-      return callbacks.resolve('any') if callbacks.resolve('any').present?
+      matching_any_callback = callbacks.resolve('any')
+      return matching_any_callback if matching_any_callback.present?
 
-      first_matching_key = callbacks.keys.sort.reverse.find do |key|
-        regex_key = key.gsub('*', '[0-9]{1}')
-        key_from_response =~ /\A#{regex_key}\z/
-      end
-
-      first_matching_key && callbacks.resolve(first_matching_key) ||
+      callbacks.resolve(key_from_response) ||
         response.success? && callbacks.resolve('success') ||
         response.timed_out? && callbacks.resolve('timed_out') ||
         !response.success? && callbacks.resolve('error') ||
@@ -59,6 +55,14 @@ module NxtHttpClient
     end
 
     private
+
+    def regex_or_code(key)
+      return key if key.is_a?(Regexp)
+      return key if key.to_s.exclude?('*')
+
+      regex_key = key.to_s.gsub('*', '[0-9]{1}')
+      /\A#{regex_key}\z/
+    end
 
     def raise_callback_already_registered(code)
       msg = "Callback already registered for status: #{code}."

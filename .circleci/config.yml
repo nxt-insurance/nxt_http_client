@@ -9,7 +9,7 @@ jobs:
       - image: circleci/ruby:2.7.0-node
       - image: circleci/redis:5.0.4
     environment:
-      BUNDLER_VERSION: 2.1.4
+      BUNDLER_VERSION: 2.2.4
 
     working_directory: ~/repo
 

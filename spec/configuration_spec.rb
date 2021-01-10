@@ -7,7 +7,7 @@ RSpec.describe NxtHttpClient::Client do
         config.request_options = { method: :get }
       end
 
-      register_response_handler do |handler|
+      response_handler do |handler|
         handler.on(200) do |response|
           response.request.original_options.symbolize_keys
         end
@@ -68,11 +68,11 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     it 'dups the configuration' do
-      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
-      expect(level_three.default_config.request_options).to eq({"headers"=>{"token"=>"level three token"}})
-      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
-      expect(level_two.default_config.request_options).to eq({"headers"=>{"token"=>"level two token"}})
-      expect(level_one.default_config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+      expect(level_one.config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+      expect(level_three.config.request_options).to eq({"headers"=>{"token"=>"level three token"}})
+      expect(level_one.config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
+      expect(level_two.config.request_options).to eq({"headers"=>{"token"=>"level two token"}})
+      expect(level_one.config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
     end
   end
 end

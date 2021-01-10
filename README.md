@@ -1,9 +1,11 @@
 # NxtHttpClient
 
-Build http clients with ease. NxtHttpClient is a simple DSL on top of the awesome typhoeus gem.
-The idea is that you can configure your http clients on the class level and then adjust or further configure
-request options on the instance level. All http interactions are handled by typhoeus. If you need to 
-access the original `Typhoeus::Request` in your instance, you can do that. 
+Build http clients with ease. NxtHttpClient is a simple DSL on top of the [typhoeus](https://github.com/typhoeus/typhoeus)
+gem. NxtHttpClient mostly provides you a simple configuration functionality to setup http connections on the class level. 
+Furthermore it's mostly a callback framework that allows you to seamlessly handle your responses. Since it's is just a simple
+layer on top of [typhoeus](https://github.com/typhoeus/typhoeus) it also allows to access and configure the original 
+`Typhoeus::Request` before making a request.
+
 
 ## Installation
 
@@ -23,16 +25,33 @@ Or install it yourself as:
 
 ## Usage
 
-```ruby
-class MyClient < NxtHttpClient
-  
-  # In your subclasses you probably want to deep_merge options in order to not overwrite options inherited 
-  # from the parent class. Of course this will not influence the parent class and you can also reset them 
-  # to a new hash here.
-  
-  # Also be aware that the result of x_request_id_proc will be hashed into the cache key and thus might cause 
-  # your request not to be cached if not used properly
+A typical client could look something like this:
 
+```ruby
+class UserFetcher < Client
+  def initialize(id)
+    @url = ".../users/#{id}"
+  end
+
+  def call
+    get(url) do |response_handler|
+      response_handler.on(:success) do |response|
+        JSON(response.body)
+      end
+    end
+  end
+  
+  private
+
+  attr_reader :url
+end
+```
+
+In order to setup a shared configuration you would therefore setup a client base class. The configuration and any 
+response handler or callbacks you setup in your base class are then inherited to your concrete client implementations.
+
+```ruby
+class Client < NxtHttpClient
   configure do |config|
     config.base_url = 'www.example.com'
     config.request_options.deep_merge!(
@@ -43,54 +62,14 @@ class MyClient < NxtHttpClient
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
   end
   
-  register_response_handler do |handler|
+  log do |info|
+    Rails.logger.info(info)
+  end
+  
+  response_handler do |handler|
     handler.on(:error) do |response|
-      Raven.extra_context(error_details: error.to_h) # call error.to_h to inspect request and response
+      Raven.extra_context(error_details: error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
-    end
-  end
-  
-  # Will be called before fire so you can reconfigure your handler before fire
-  before_fire do |client, request, handler|
-    handler.on!(200) do |response|
-      # ...
-    end
-  end
-  
-  # Will be called after fire. You probably want to return the result here in order for your code 
-  # to be able to access the result from the response handler from before. 
-  # In case one of the response handler callbacks raises an error
-  # after fire will has access to it and you may want to reraise the error in that case.
-
-  after_fire do |client, request, response, result, error|
-    if error
-      raise error
-    else  
-      result
-    end
-  end
-  
-  def fetch_details
-    fire('details', method: :get) do |handler|
-      handler.on(:success) do |response|
-        response.body
-      end
-      
-      handler.on(404) do |response|
-        raise StandardError, '404'
-      end
-      
-      # You can also fuzzy match response codes using the wildcard *
-      handler.on('5**') do |response|
-        raise StandardError, 'This is bad'
-      end
-    end
-  end
-  
-  # there are also convenience methods for all http verbs (get post patch put delete head)
-  def update
-    post(params: { my: 'payload' }) do |handler|
-    # ...
     end
   end
 end
@@ -98,11 +77,10 @@ end
 
 ### HTTP Methods
 
-Instead of fire you can simply use the http verbs as methods
+In order to build a request and execute it NxtHttpClient implements all http standard methods. 
 
 ```ruby
-class MyClient < NxtHttpClient
-  
+class Client < NxtHttpClient
   def initialize(url)
     @url = url
   end
@@ -131,21 +109,22 @@ class MyClient < NxtHttpClient
 end
 ```
 
-
 ### configure
 
-Register default request options on the class level. Available options are `request_options` that are passed directly to 
-the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`. 
+Register your default request options on the class level. Available options are `request_options` that are passed 
+directly to the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`.
 
-### register_response_handler
+### response_handler
 
-Register a default response handler for your client class. 
-You can reconfigure or overwrite it this completely later on the instance level. 
+Register a default response handler for your client class. You can reconfigure or overwrite this in subclasses and 
+on the instance level. 
 
 ### fire
 
-Use `fire('uri', **request_options)` to actually fire your requests and define what to do with the response by using
-the NxtHttpClient DSL. Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first 
+All http methods internally are delegate to `fire('uri', **request_options)`. Since `fire` is a public method you can 
+also use it to fire your requests and use the response handler to register callbacks for specific responses.
+
+Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first 
 and more common callbacks will come later in case none of the specific callbacks matched. It this is not what you want you
 can simply put the logic you need into one common callback that is called in any case. You can also use strings with wildcards
 to match a group of response by status code. `handler.on('4**') { ... }` basically would match all client errors.   
@@ -184,15 +163,83 @@ end
 
 ### Callbacks around fire
 
-You can also hook into the before_fire and after_fire callbacks to do something before and after the actual request is executed.
-These callbacks are inherited down the class hierarchy but are not being chained. Meaning when you overwrite those in your subclass,
-the callbacks defined by your parent class will not be called anymore.
+Next to implementing callbacks for handling responses there are also callbacks around making requests. Note tht you can 
+have as many callbacks as you want. In case you need to reset them because you do not want to inherit them from your 
+parent class (might be a smell when you need to...) you can reset callbacks via `clear_fire_callbacks` on the class level.
+
+```ruby
+
+clear_fire_callbacks # Call this to clear callbacks setup in the parent class
+
+before_fire do |client, request, response_handler|
+  # here you have access to the client, request and response_handler  
+end
+
+around_fire do |client, request, response_handler, fire|
+  # here you have access to the client, request and response_handler
+  fire.call # You have to call fire here and return the result to the next callback in the chain
+end
+
+after_fire do |client, request, response, result, error|
+  result # The result of the last callback in the chain is the result of fire!
+end
+```
+
 
 ### NxtHttpClient::Error
 
 NxtHttpClient also provides an error base class that you might want to use as the base for your client errors.
 It comes with a nice set of useful methods. You can ask the error for the request and response options since it
-requires the response for initialization. 
+requires the response for initialization. Furthermore it has a handy `to_h` method that provides you all info about 
+the request and response.
+
+### Logging
+
+NxtHttpClient also comes with a log method on the class level that you can pass a proc if you want to log your request.
+Your proc needs to accept an argument in order to get access to information about the request and response made.  
+
+```ruby
+log do |info|
+  Rails.logger.info(info)
+end
+
+# info is a hash that is implemented as follows:
+
+{
+  client: client,
+  started_at: started_at,
+  request: request,
+  finished_at: now,
+  elapsed_time_in_milliseconds: finished_at - started_at,
+  response: request.response,
+  http_status: request.response&.code
+}
+```
+
+### Caching
+
+Typhoeus ships with caching built in. Checkout the [typhoeus](https://github.com/typhoeus/typhoeus) docu to figure out 
+how to set it up. NxtHttpClient builds some functionality on top of this and offer to cache requests within the current 
+thread or globally. You can simply make use of it by providing one of the caching options `:thread` or`:global` as config 
+request option or the actual request options when building the request. 
+
+```ruby
+class Client < NxtHttpClient::Client
+  configure do |config|
+    config.request_options = { cache: :thread }
+  end
+  
+  response_handler do |handler|
+    handler.on(200) do |response|
+      # ...
+    end
+  end
+  
+  def call
+    get('.../url.com', cache: :thread) # configure caching per request level
+  end
+end
+```
 
 ## Development
 
@@ -202,7 +249,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/nxt_http_client.
+Bug reports and pull requests are welcome on GitHub at https://github.com/nxt-insurance/nxt_http_client.
 
 ## License
 
