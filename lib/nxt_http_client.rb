@@ -1,6 +1,7 @@
 require 'active_support/all'
 require 'typhoeus'
 require 'nxt_registry'
+require 'parallel'
 
 require 'nxt_http_client/version'
 require 'nxt_http_client/x_request_id'

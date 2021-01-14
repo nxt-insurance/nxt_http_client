@@ -1,16 +1,24 @@
 module NxtHttpClient
   class Concurrency
-    ID = 'NxtHttpClient::Hydra'
-    RESPONSES = 'NxtHttpClient::Hydra::Responses'
-    RESULT_MAP = 'NxtHttpClient::Hydra::ResultMap'
+    ID = 'NxtHttpClient::Queue'
+    RESPONSES = 'NxtHttpClient::Queue::Responses'
+    RESULT_MAP = 'NxtHttpClient::Queue::ResultMap'
+
+    def initialize
+      @queue = []
+    end
 
     def parallel(**opts, &block)
       results_need_to_be_mapped = block.arity == 1
 
       thread = Thread.new do
-        hydra = memoize_on_thread(**opts)
+        memoize_queue_on_thread
+        # TODO: Fix mapping
         results_need_to_be_mapped ? block.call(result_map) : block.call
-        hydra.run
+
+        ::Parallel.map(queue, **opts) do |request|
+          request.run
+        end
       end
 
       thread.join
@@ -23,11 +31,11 @@ module NxtHttpClient
     end
 
     def sequential_or_parallel(&block)
-      request = block.call(hydra)
-      hydra.queue(request)
+      request = block.call(queue)
+      queue << request
       return request if parallel?
 
-      hydra.run
+      request.run
       get_response(request)
     end
 
@@ -45,6 +53,8 @@ module NxtHttpClient
     end
 
     private
+
+    attr_reader :queue
 
     def map_results_by_requests(thread)
       map = result_map(thread).invert
@@ -64,16 +74,8 @@ module NxtHttpClient
       thread[RESPONSES] ||= {}
     end
 
-    def hydra(**opts)
-      @hydra ||= Thread.current[ID] || build_hydra(**opts)
-    end
-
-    def memoize_on_thread(**opts)
-      Thread.current[ID] = build_hydra(**opts)
-    end
-
-    def build_hydra(**opts)
-      Typhoeus::Hydra.new(**opts)
+    def memoize_queue_on_thread
+      Thread.current[ID] = queue
     end
   end
 end
