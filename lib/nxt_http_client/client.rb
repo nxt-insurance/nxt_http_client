@@ -14,7 +14,7 @@ module NxtHttpClient
     delegate :before_fire_callback, :after_fire_callback, to: :class
 
     def fire(url = '', **opts, &block)
-      concurrency.sequential_or_parallel do |_|
+      concurrency.sequential_or_parallel do
         request = build_request(url, **opts.except(:response_handler))
 
         response_handler = build_response_handler(opts[:response_handler], &block)

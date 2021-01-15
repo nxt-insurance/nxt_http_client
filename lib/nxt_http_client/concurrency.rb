@@ -4,36 +4,40 @@ module NxtHttpClient
     RESPONSES = 'NxtHttpClient::Queue::Responses'
     RESULT_MAP = 'NxtHttpClient::Queue::ResultMap'
 
-    def initialize
-      @queue = []
-    end
-
     def parallel(**opts, &block)
       results_need_to_be_mapped = block.arity == 1
 
       thread = Thread.new do
-        memoize_queue_on_thread
+        init_parallelization
         # TODO: Fix mapping
         results_need_to_be_mapped ? block.call(result_map) : block.call
-
-        ::Parallel.map(queue, **opts) do |request|
-          request.run
-        end
       end
 
       thread.join
 
+      results = ::Parallel.map(thread[ID], **opts) do |request|
+        { request => request.run }
+      end
+
+      results = results.inject({}) do |acc, hash|
+        acc.merge(hash)
+      end
+
       if results_need_to_be_mapped
+        binding.pry
         map_results_by_requests(thread)
       else
-        responses(thread)
+        results
       end
     end
 
     def sequential_or_parallel(&block)
-      request = block.call(queue)
-      queue << request
-      return request if parallel?
+      request = block.call
+
+      if parallel?
+        queue << request
+        return request
+      end
 
       request.run
       get_response(request)
@@ -49,19 +53,18 @@ module NxtHttpClient
     end
 
     def parallel?
-      Thread.current[ID].present?
+      Thread.current[ID].is_a?(Array)
     end
 
     private
 
-    attr_reader :queue
+    def queue
+      Thread.current[ID]
+    end
 
     def map_results_by_requests(thread)
-      map = result_map(thread).invert
-
-      responses(thread).inject({}) do |acc, (request, response)|
-        key = map.fetch(request)
-        acc[key] = response
+      result_map(thread).inject({}) do |acc, (key, request)|
+        acc[key] = request.response.handled_response
         acc
       end
     end
@@ -74,8 +77,8 @@ module NxtHttpClient
       thread[RESPONSES] ||= {}
     end
 
-    def memoize_queue_on_thread
-      Thread.current[ID] = queue
+    def init_parallelization
+      Thread.current[ID] = []
     end
   end
 end
