@@ -31,7 +31,7 @@ module NxtHttpClient
           current_error = error
         ensure
           result = run_after_fire_callback(request, response, result, current_error)
-          concurrency.set_response(request, result) || (raise current_error)
+          result || (raise current_error)
         end
 
         request

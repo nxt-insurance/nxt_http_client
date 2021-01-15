@@ -7,25 +7,27 @@ module NxtHttpClient
     def parallel(**opts, &block)
       results_need_to_be_mapped = block.arity == 1
 
-      thread = Thread.new do
+      request_factory = Thread.new do
         init_parallelization
-        # TODO: Fix mapping
         results_need_to_be_mapped ? block.call(result_map) : block.call
       end
 
-      thread.join
+      request_factory.join
 
-      results = ::Parallel.map(thread[ID], **opts) do |request|
+      results = ::Parallel.map(queue(request_factory), **opts) do |request|
         { request => request.run }
       end
 
-      results = results.inject({}) do |acc, hash|
-        acc.merge(hash)
+      results = results.inject({}) do |acc, request_response_hash|
+        acc[request_response_hash.keys.first] = request_response_hash.values.first&.handled_response
+        acc
       end
 
       if results_need_to_be_mapped
-        binding.pry
-        map_results_by_requests(thread)
+        result_map(request_factory).inject({}) do |acc, (key, request)|
+          acc[key] = results[request]
+          acc
+        end
       else
         results
       end
@@ -39,17 +41,8 @@ module NxtHttpClient
         return request
       end
 
-      request.run
-      get_response(request)
-    end
-
-    def set_response(request, response)
-      responses[request] = response
-      response
-    end
-
-    def get_response(request)
-      responses[request]
+      result = request.run
+      result&.handled_response
     end
 
     def parallel?
@@ -58,23 +51,12 @@ module NxtHttpClient
 
     private
 
-    def queue
-      Thread.current[ID]
-    end
-
-    def map_results_by_requests(thread)
-      result_map(thread).inject({}) do |acc, (key, request)|
-        acc[key] = request.response.handled_response
-        acc
-      end
+    def queue(thread = Thread.current)
+      thread[ID]
     end
 
     def result_map(thread = Thread.current)
       thread[RESULT_MAP] ||= {}
-    end
-
-    def responses(thread = Thread.current)
-      thread[RESPONSES] ||= {}
     end
 
     def init_parallelization
