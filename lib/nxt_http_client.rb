@@ -5,6 +5,8 @@ require 'parallel'
 
 require 'nxt_http_client/version'
 require 'nxt_http_client/headers'
+require 'nxt_http_client/request_builder'
+require 'nxt_http_client/request_executor'
 require 'nxt_http_client/concurrent'
 require 'nxt_http_client/response_handler'
 require 'nxt_http_client/config'
