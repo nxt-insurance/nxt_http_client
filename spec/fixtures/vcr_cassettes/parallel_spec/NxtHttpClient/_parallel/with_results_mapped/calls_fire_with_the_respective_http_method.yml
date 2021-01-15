@@ -1,0 +1,308 @@
+---
+http_interactions:
+- request:
+    method: put
+    uri: http://httpstat.us/200
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 15 Jan 2021 22:07:37 GMT
+      Content-Type:
+      - text/plain; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
+      - __cfduid=d362ae96bc2e6319bd5488e4dfbb6324e1610748457; expires=Sun, 14-Feb-21
+        22:07:37 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
+      Cache-Control:
+      - private
+      Vary:
+      - Accept-Encoding
+      X-Aspnetmvc-Version:
+      - '5.1'
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
+      - Request-Context
+      X-Aspnet-Version:
+      - 4.0.30319
+      Request-Context:
+      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
+      X-Powered-By:
+      - ASP.NET
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Request-Id:
+      - 07a9b0090200002b7db0b3d000000001
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=7jZYUlIYlHJ62EdJVZjfvEQMi5qpBr3l%2BcUaM2fNMvueTyRpzr%2FGjco28mGVPZ0GsiXlhxuQsK07XCQWF5oTNQOYQw8eqZ%2BgUP3PIw%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6122e9219ee12b7d-FRA
+    body:
+      encoding: UTF-8
+      string: 200 OK
+  recorded_at: Fri, 15 Jan 2021 22:07:37 GMT
+- request:
+    method: delete
+    uri: http://httpstat.us/200
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 15 Jan 2021 22:07:37 GMT
+      Content-Type:
+      - text/plain; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
+      - __cfduid=d131fe1f96afb2033787d6a76e75015661610748457; expires=Sun, 14-Feb-21
+        22:07:37 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
+      Cache-Control:
+      - private
+      Vary:
+      - Accept-Encoding
+      X-Aspnetmvc-Version:
+      - '5.1'
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
+      - Request-Context
+      X-Aspnet-Version:
+      - 4.0.30319
+      Request-Context:
+      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
+      X-Powered-By:
+      - ASP.NET
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Request-Id:
+      - 07a9b0090900004a926913a000000001
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=8SYKe4ONAzwhvdae%2BOsTCdA1BwcR1r0y7aZas7OSjbQUI2Nut4BvlhB0dgI2LkoN4h09vKD2PvBTMFdRjEdmnhcCSCbGBBDKTd30UA%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6122e921ac144a92-FRA
+    body:
+      encoding: UTF-8
+      string: 200 OK
+  recorded_at: Fri, 15 Jan 2021 22:07:37 GMT
+- request:
+    method: post
+    uri: http://httpstat.us/200?andy=calling
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 15 Jan 2021 22:07:37 GMT
+      Content-Type:
+      - text/plain; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
+      - __cfduid=da3ba3adab072a09939f0f59a799e40b61610748457; expires=Sun, 14-Feb-21
+        22:07:37 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
+      Cache-Control:
+      - private
+      Vary:
+      - Accept-Encoding
+      X-Aspnetmvc-Version:
+      - '5.1'
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
+      - Request-Context
+      X-Aspnet-Version:
+      - 4.0.30319
+      Request-Context:
+      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
+      X-Powered-By:
+      - ASP.NET
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Request-Id:
+      - 07a9b008f30000d72d448ae000000001
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=CBw9Q%2Fbgc%2BrILigheEJzBwQOyN%2Fqgeu8HJvZsX3vo1jLHW0ju9WjbgcAFwYfBwJxN6g99ueeOOaNd8Ah3wWPzv%2BftkdlCYjQa8JLAg%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6122e92188cad72d-FRA
+    body:
+      encoding: UTF-8
+      string: 200 OK
+  recorded_at: Fri, 15 Jan 2021 22:07:37 GMT
+- request:
+    method: patch
+    uri: http://httpstat.us/200
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 15 Jan 2021 22:07:37 GMT
+      Content-Type:
+      - text/plain; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
+      - __cfduid=dd51e77e2be4d1c64d953a597b00b7d271610748457; expires=Sun, 14-Feb-21
+        22:07:37 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
+      Cache-Control:
+      - private
+      Vary:
+      - Accept-Encoding
+      X-Aspnetmvc-Version:
+      - '5.1'
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
+      - Request-Context
+      X-Aspnet-Version:
+      - 4.0.30319
+      Request-Context:
+      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
+      X-Powered-By:
+      - ASP.NET
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Request-Id:
+      - 07a9b00907000032442a823000000001
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=44H51wz9G6H9BV5O27s3vVOwZtNquQd92vTp2bx0v5Upo3mkKwB9pNV3s82Q8OagzkN9cfsX8T990D%2FBwwYq79NVLSY7eMG120%2Bimw%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6122e921a8ad3244-FRA
+    body:
+      encoding: UTF-8
+      string: 200 OK
+  recorded_at: Fri, 15 Jan 2021 22:07:37 GMT
+- request:
+    method: get
+    uri: http://httpstat.us/200
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 15 Jan 2021 22:07:37 GMT
+      Content-Type:
+      - text/plain; charset=utf-8
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
+      - __cfduid=ddc859764f1560b0525af4965df26aa0f1610748457; expires=Sun, 14-Feb-21
+        22:07:37 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
+      Cache-Control:
+      - private
+      Vary:
+      - Accept-Encoding
+      X-Aspnetmvc-Version:
+      - '5.1'
+      Access-Control-Allow-Origin:
+      - "*"
+      Access-Control-Expose-Headers:
+      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
+      - Request-Context
+      X-Aspnet-Version:
+      - 4.0.30319
+      Request-Context:
+      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
+      X-Powered-By:
+      - ASP.NET
+      Cf-Cache-Status:
+      - DYNAMIC
+      Cf-Request-Id:
+      - 07a9b0090700002c19e9b1e000000001
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=b5NBH0aTmjbv3T%2B6goJH6qWBeIvbxwMWv%2FiYrdZKgFDVOjGnfHiTX2oXELvi3Imd7iUt90THziA1xhEneuEGe26gyJhPGhRk2xsOig%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Nel:
+      - '{"report_to":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      Cf-Ray:
+      - 6122e921ac782c19-FRA
+    body:
+      encoding: UTF-8
+      string: 200 OK
+  recorded_at: Fri, 15 Jan 2021 22:07:37 GMT
+recorded_with: VCR 6.0.0

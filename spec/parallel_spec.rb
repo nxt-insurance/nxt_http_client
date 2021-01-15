@@ -20,7 +20,7 @@ RSpec.describe NxtHttpClient do
 
     context 'with results mapped' do
       it 'calls fire with the respective http method', :vcr_cassette do
-        result = described_class.parallel do |results|
+        result = described_class.parallel(in_threads: 5) do |results|
           results[:post] = client.post(url, params: { andy: 'calling' })
           results[:get] = client.get(url)
           results[:patch] = client.patch(url)
@@ -40,7 +40,7 @@ RSpec.describe NxtHttpClient do
 
     context 'without mapping results' do
       it 'calls fire with the respective http method', :vcr_cassette do
-        result = described_class.parallel do
+        result = described_class.parallel(in_processes: 5) do
           client.post(url, params: { andy: 'calling' })
           client.get(url)
           client.patch(url)
