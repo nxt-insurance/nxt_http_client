@@ -139,7 +139,7 @@ module NxtHttpClient
     end
 
     def concurrency
-      @concurrency ||= Concurrency.new
+      @concurrency ||= Concurrent.new
     end
   end
 end
