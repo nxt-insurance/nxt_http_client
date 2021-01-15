@@ -14,7 +14,7 @@ module NxtHttpClient
       request_factory.join
 
       results = ::Parallel.map(queue(request_factory), **opts) do |request|
-        { request => request.run }
+        { request => request.call }
       end
 
       results = results.inject({}) do |acc, request_response_hash|
@@ -26,15 +26,12 @@ module NxtHttpClient
     end
 
     def sequential_or_parallel(&block)
-      request = block.call
-
       if parallel?
-        queue << request
-        return request
+        queue << block
+        return block
       end
 
-      result = request.run
-      result&.handled_response
+      block.call
     end
 
     private
