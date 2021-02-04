@@ -1,3 +1,8 @@
+# v1.0.1 2021-02-04
+
+### Update NxtRegistry
+- update nxt_registry to 0.3.8
+
 # v1.0.0 2021-01-10
 
 ### Breaking changes
