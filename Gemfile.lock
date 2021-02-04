@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    nxt_http_client (1.0.0)
+    nxt_http_client (1.0.1)
       activesupport (~> 6.0)
       nxt_registry
       typhoeus
