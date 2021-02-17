@@ -9,6 +9,7 @@ module NxtHttpClient
     end
 
     attr_reader :response, :id, :message
+    delegate :timed_out?, :status_message, to: :response
 
     alias_method :to_s, :message
 
@@ -76,5 +77,3 @@ module NxtHttpClient
     end
   end
 end
-
-

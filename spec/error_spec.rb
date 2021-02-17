@@ -13,6 +13,8 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.response_options).to eq({})
       expect(subject.response_headers).to eq({})
       expect(subject.response_content_type).to be_nil
+      expect(subject.timed_out?).to be(false)
+      expect(subject.status_message).to be(nil)
     end
   end
 
@@ -48,6 +50,9 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.to_h.keys).to match_array(
         %i[id url response_code request_options response_headers request_headers body x_request_id]
       )
+      expect(subject.timed_out?).to be(false)
+      expect(subject.response_code).to be(503)
+      expect(subject.status_message).to eq('Service Unavailable')
     end
   end
 
