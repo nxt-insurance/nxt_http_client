@@ -1,9 +1,9 @@
 # NxtHttpClient
 
 Build http clients with ease. NxtHttpClient is a simple DSL on top of the [typhoeus](https://github.com/typhoeus/typhoeus)
-gem. NxtHttpClient mostly provides you a simple configuration functionality to setup http connections on the class level. 
+gem. NxtHttpClient mostly provides you a simple configuration functionality to setup http connections on the class level.
 Furthermore it's mostly a callback framework that allows you to seamlessly handle your responses. Since it's is just a simple
-layer on top of [typhoeus](https://github.com/typhoeus/typhoeus) it also allows to access and configure the original 
+layer on top of [typhoeus](https://github.com/typhoeus/typhoeus) it also allows to access and configure the original
 `Typhoeus::Request` before making a request.
 
 
@@ -40,14 +40,14 @@ class UserFetcher < Client
       end
     end
   end
-  
+
   private
 
   attr_reader :url
 end
 ```
 
-In order to setup a shared configuration you would therefore setup a client base class. The configuration and any 
+In order to setup a shared configuration you would therefore setup a client base class. The configuration and any
 response handler or callbacks you setup in your base class are then inherited to your concrete client implementations.
 
 ```ruby
@@ -59,13 +59,13 @@ class Client < NxtHttpClient
       method: :get,
       followlocation: true
     )
-    config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join } 
+    config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join }
   end
-  
+
   log do |info|
     Rails.logger.info(info)
   end
-  
+
   response_handler do |handler|
     handler.on(:error) do |response|
       Raven.extra_context(error_details: error.to_h)
@@ -77,7 +77,7 @@ end
 
 ### HTTP Methods
 
-In order to build a request and execute it NxtHttpClient implements all http standard methods. 
+In order to build a request and execute it NxtHttpClient implements all http standard methods.
 
 ```ruby
 class Client < NxtHttpClient
@@ -111,20 +111,20 @@ end
 
 ### configure
 
-Register your default request options on the class level. Available options are `request_options` that are passed 
+Register your default request options on the class level. Available options are `request_options` that are passed
 directly to the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`.
 
 ### response_handler
 
-Register a default response handler for your client class. You can reconfigure or overwrite this in subclasses and 
-on the instance level. 
+Register a default response handler for your client class. You can reconfigure or overwrite this in subclasses and
+on the instance level.
 
 ### fire
 
-All http methods internally are delegate to `fire('uri', **request_options)`. Since `fire` is a public method you can 
+All http methods internally are delegate to `fire('uri', **request_options)`. Since `fire` is a public method you can
 also use it to fire your requests and use the response handler to register callbacks for specific responses.
 
-Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first 
+Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first
 and more common callbacks will come later in case none of the specific callbacks matched. It this is not what you want you
 can simply put the logic you need into one common callback that is called in any case. You can also use strings with wildcards
 to match a group of response by status code. `handler.on('4**') { ... }` basically would match all client errors.   
@@ -138,33 +138,33 @@ fire('uri', **request_options) do |handler|
   handler.on(:success) do |response|
     response.body
   end
-  
+
   handler.on(:timed_out) do |response|
     raise StandardError, 'Timeout'
   end
-  
+
   handler.on(:error) do |response|
     raise StandardError, 'This is bad'
   end
-  
+
   handler.on(:others) do |response|
     raise StandardError, 'Other problem'
   end
-  
+
   handler.on(:headers) do |response|
     # This is already executed when the headers are received
   end
-  
+
   handler.on(:body) do |chunk|
-   # Use this to stream the body in chunks 
+   # Use this to stream the body in chunks
   end
 end
-``` 
+```
 
 ### Callbacks around fire
 
-Next to implementing callbacks for handling responses there are also callbacks around making requests. Note tht you can 
-have as many callbacks as you want. In case you need to reset them because you do not want to inherit them from your 
+Next to implementing callbacks for handling responses there are also callbacks around making requests. Note tht you can
+have as many callbacks as you want. In case you need to reset them because you do not want to inherit them from your
 parent class (might be a smell when you need to...) you can reset callbacks via `clear_fire_callbacks` on the class level.
 
 ```ruby
@@ -190,8 +190,11 @@ end
 
 NxtHttpClient also provides an error base class that you might want to use as the base for your client errors.
 It comes with a nice set of useful methods. You can ask the error for the request and response options since it
-requires the response for initialization. Furthermore it has a handy `to_h` method that provides you all info about 
+requires the response for initialization. Furthermore it has a handy `to_h` method that provides you all info about
 the request and response.
+
+#### Timeouts
+NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. This is useful when setting a custom timeout value in your configuration.
 
 ### Logging
 
@@ -218,23 +221,23 @@ end
 
 ### Caching
 
-Typhoeus ships with caching built in. Checkout the [typhoeus](https://github.com/typhoeus/typhoeus) docu to figure out 
-how to set it up. NxtHttpClient builds some functionality on top of this and offer to cache requests within the current 
-thread or globally. You can simply make use of it by providing one of the caching options `:thread` or`:global` as config 
-request option or the actual request options when building the request. 
+Typhoeus ships with caching built in. Checkout the [typhoeus](https://github.com/typhoeus/typhoeus) docu to figure out
+how to set it up. NxtHttpClient builds some functionality on top of this and offer to cache requests within the current
+thread or globally. You can simply make use of it by providing one of the caching options `:thread` or`:global` as config
+request option or the actual request options when building the request.
 
 ```ruby
 class Client < NxtHttpClient::Client
   configure do |config|
     config.request_options = { cache: :thread }
   end
-  
+
   response_handler do |handler|
     handler.on(200) do |response|
       # ...
     end
   end
-  
+
   def call
     get('.../url.com', cache: :thread) # configure caching per request level
   end

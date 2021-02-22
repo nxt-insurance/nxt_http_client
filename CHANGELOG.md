@@ -1,3 +1,8 @@
+# v1.0.2 2021-02-17
+
+### Update NxtHttpClient::Error
+- delegate timed_out? and status_message to response
+
 # v1.0.1 2021-02-04
 
 ### Update NxtRegistry
