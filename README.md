@@ -244,6 +244,10 @@ class Client < NxtHttpClient::Client
 end
 ```
 
+NOTE: In order to avoid problems with threaded application servers you should always clear the cache key one your 
+threads once the request is finished using `NxtHttpClient.clear_thread_cache_key` to not have other threads use the 
+same cache key and thus use cached results across threads.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

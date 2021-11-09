@@ -81,7 +81,7 @@ module NxtHttpClient
 
         case strategy.to_s
           when 'thread'
-            cache_key = Thread.current[:nxt_http_client_cache_key] ||= "#{SecureRandom.base58}::#{DateTime.current}"
+            cache_key = NxtHttpClient.set_thread_cache_key
             opts[:headers].reverse_merge!(cache_key: cache_key)
           when 'global'
             opts[:headers].delete(:cache_key)

@@ -75,4 +75,16 @@ RSpec.describe NxtHttpClient::Client do
       expect(level_one.config.request_options).to eq({"headers"=>{"token"=>"level one token"}})
     end
   end
+
+  describe '.clear_thread_cache_key' do
+    before do
+      NxtHttpClient.set_thread_cache_key
+    end
+
+    it 'clears the cache key' do
+      expect {
+        NxtHttpClient.clear_thread_cache_key
+      }.to change { Thread.current[NxtHttpClient::THREAD_CACHE_KEY] }.to(nil)
+    end
+  end
 end
