@@ -244,7 +244,7 @@ class Client < NxtHttpClient::Client
 end
 ```
 
-NOTE: In order to avoid problems with threaded application servers you should always clear the cache key one your 
+NOTE: In order to avoid problems with threaded application servers you should always clear the cache key on your 
 threads once the request is finished using `NxtHttpClient.clear_thread_cache_key` to not have other threads use the 
 same cache key and thus use cached results across threads.
 
