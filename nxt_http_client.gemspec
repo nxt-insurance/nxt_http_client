@@ -1,4 +1,3 @@
-
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "nxt_http_client/version"
@@ -36,12 +35,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'typhoeus'
-  spec.add_dependency 'activesupport', '~> 7.0'
+  spec.add_dependency 'activesupport', '< 8.0'
   spec.add_dependency 'nxt_registry'
 
-  spec.add_development_dependency 'bundler', '~> 2.2'
-  spec.add_development_dependency 'rake', '~> 13.0'
-  spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'rspec'
   spec.add_development_dependency 'pry'
   spec.add_development_dependency 'vcr'
   spec.add_development_dependency 'webmock'
