@@ -56,7 +56,7 @@ GEM
     rspec-support (3.10.3)
     rspec_junit_formatter (0.5.1)
       rspec-core (>= 2, < 4, != 2.12.0)
-    timecop (0.9.4)
+    timecop (0.9.5)
     typhoeus (1.4.0)
       ethon (>= 0.9.0)
     tzinfo (2.0.4)
