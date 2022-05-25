@@ -20,51 +20,24 @@ http_interactions:
       code: 401
       message: Unauthorized
     headers:
-      Date:
-      - Sun, 03 Jan 2021 21:39:35 GMT
-      Content-Type:
-      - text/plain; charset=utf-8
       Content-Length:
       - '16'
-      Connection:
-      - keep-alive
-      Set-Cookie:
-      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
-      - __cfduid=d2e426080cec4fabd9527d551ef2f549d1609709975; expires=Tue, 02-Feb-21
-        21:39:35 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
-      Cache-Control:
-      - private
+      Content-Type:
+      - text/plain
+      Server:
+      - Kestrel
       Www-Authenticate:
       - Basic realm="Fake Realm"
-      X-Aspnetmvc-Version:
-      - '5.1'
-      Access-Control-Allow-Origin:
-      - "*"
-      Access-Control-Expose-Headers:
-      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
-      - Request-Context
-      X-Aspnet-Version:
-      - 4.0.30319
       Request-Context:
-      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
-      X-Powered-By:
-      - ASP.NET
-      Cf-Cache-Status:
-      - DYNAMIC
-      Cf-Request-Id:
-      - 076bca0e2700004a9d5706f000000001
-      Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=fqy3sWnsdGmxlz2rnP3gwGAW7LkmOuKmkhg2yP80GZNoFFuR%2FAhVJk9Qj7rJhnSt6hVLteelP3XE4OwLvd0ojT5kHt9CRNsPxo39Z3j%2Fv%2F8i%2FvD3v1sj3Q%3D%3D"}],"group":"cf-nel","max_age":604800}'
-      Nel:
-      - '{"report_to":"cf-nel","max_age":604800}'
-      Server:
-      - cloudflare
-      Cf-Ray:
-      - 60bfdf903c534a9d-FRA
+      - appId=cid-v1:1e93d241-20e4-4513-bbd7-f452a16a5d69
+      Set-Cookie:
+      - ARRAffinity=41f1d5e9b5eff415303dcbd469fc01275bb5e4a1954915ce2a488869684dd75b;Path=/;HttpOnly;Domain=httpstat.us
+      Date:
+      - Mon, 23 May 2022 17:01:04 GMT
     body:
-      encoding: UTF-8
+      encoding: ASCII-8BIT
       string: 401 Unauthorized
-  recorded_at: Sun, 03 Jan 2021 21:39:35 GMT
+  recorded_at: Mon, 23 May 2022 17:01:04 GMT
 - request:
     method: get
     uri: http://httpstat.us/200
@@ -85,49 +58,56 @@ http_interactions:
       code: 200
       message: OK
     headers:
-      Date:
-      - Sun, 03 Jan 2021 21:39:35 GMT
+      Content-Length:
+      - '6'
       Content-Type:
-      - text/plain; charset=utf-8
-      Transfer-Encoding:
-      - chunked
-      Connection:
-      - keep-alive
-      Set-Cookie:
-      - ARRAffinity=aa7214e558cff739be817ef480b08a34dc9d3baece3b17e80388165322084722;Path=/;HttpOnly;Domain=httpstat.us
-      - __cfduid=d2e426080cec4fabd9527d551ef2f549d1609709975; expires=Tue, 02-Feb-21
-        21:39:35 GMT; path=/; domain=.httpstat.us; HttpOnly; SameSite=Lax
-      Cache-Control:
-      - private
-      Vary:
-      - Accept-Encoding
-      X-Aspnetmvc-Version:
-      - '5.1'
-      Access-Control-Allow-Origin:
-      - "*"
-      Access-Control-Expose-Headers:
-      - Link, Content-Range, Location, WWW-Authenticate, Proxy-Authenticate, Retry-After
-      - Request-Context
-      X-Aspnet-Version:
-      - 4.0.30319
-      Request-Context:
-      - appId=cid-v1:7585021b-2db7-4da6-abff-2cf23005f0a9
-      X-Powered-By:
-      - ASP.NET
-      Cf-Cache-Status:
-      - DYNAMIC
-      Cf-Request-Id:
-      - 076bca0fb200004a9de9059000000001
-      Report-To:
-      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report?s=Sw8y98hSnj93YTIWyrtw54RvYp7qcgYMen2mACAvZ1qesYgjhykrLtQUGIZDfdfbQDj%2BGL3cGO7Z1r3gg%2BtcuK5z8FvkGpRyrr0DxAYH02p%2F1rc0qFwF5A%3D%3D"}],"group":"cf-nel","max_age":604800}'
-      Nel:
-      - '{"report_to":"cf-nel","max_age":604800}'
+      - text/plain
       Server:
-      - cloudflare
-      Cf-Ray:
-      - 60bfdf92bae94a9d-FRA
+      - Kestrel
+      Request-Context:
+      - appId=cid-v1:1e93d241-20e4-4513-bbd7-f452a16a5d69
+      Set-Cookie:
+      - ARRAffinity=41f1d5e9b5eff415303dcbd469fc01275bb5e4a1954915ce2a488869684dd75b;Path=/;HttpOnly;Domain=httpstat.us
+      Date:
+      - Mon, 23 May 2022 17:01:04 GMT
     body:
-      encoding: UTF-8
+      encoding: ASCII-8BIT
       string: 200 OK
-  recorded_at: Sun, 03 Jan 2021 21:39:35 GMT
+  recorded_at: Mon, 23 May 2022 17:01:04 GMT
+- request:
+    method: get
+    uri: http://httpstat.us/200
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Accept:
+      - text/html
+      Token:
+      - my custom token
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Content-Length:
+      - '6'
+      Content-Type:
+      - text/plain
+      Server:
+      - Kestrel
+      Request-Context:
+      - appId=cid-v1:1e93d241-20e4-4513-bbd7-f452a16a5d69
+      Set-Cookie:
+      - ARRAffinity=41f1d5e9b5eff415303dcbd469fc01275bb5e4a1954915ce2a488869684dd75b;Path=/;HttpOnly;Domain=httpstat.us
+      Date:
+      - Mon, 23 May 2022 17:01:04 GMT
+    body:
+      encoding: ASCII-8BIT
+      string: 200 OK
+  recorded_at: Mon, 23 May 2022 17:01:04 GMT
 recorded_with: VCR 6.0.0

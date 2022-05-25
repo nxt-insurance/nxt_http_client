@@ -121,6 +121,32 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
+  let(:level_three_sibling) do
+    Class.new(level_two) do
+      before_fire do |client, request, response_handler|
+        log << { level_three_sibling: request.url }
+      end
+
+      around_fire do |client, request, response_handler, fire|
+        log << { level_three_sibling: 'around fire before' }
+        result = fire.call
+        log << { level_three_sibling: 'around fire after' }
+
+        result
+      end
+
+      after_fire do |client, request, response, result, error|
+        log << { level_three_sibling: response.code }
+
+        if error
+          raise error
+        else
+          result
+        end
+      end
+    end
+  end
+
   let(:level_four) do
     Class.new(level_three) do
       configure do |config|
@@ -195,6 +221,7 @@ RSpec.describe NxtHttpClient::Client do
   describe '#before_fire' do
     let(:level_two_client) { level_two.new }
     let(:level_three_client) { level_three.new }
+    let(:level_three_sibling_client) { level_three_sibling.new }
 
     it 'calls the correct callbacks', :vcr_cassette do
       expect { level_two_client.call('401') }.to change { level_two_client.log }
@@ -210,6 +237,16 @@ RSpec.describe NxtHttpClient::Client do
         { :level_three => "around fire 2 after" },
         { :level_three => "around fire 1 after" },
         { :level_three => 200 }
+      ])
+
+      expect { level_three_sibling_client.call('200') }.to change { level_three_sibling_client.log }
+      expect(level_three_sibling_client.log).to eq([
+        { level_one: "httpstat.us/200" },
+        { level_three_sibling: "httpstat.us/200" },
+        { level_three_sibling: "around fire before" },
+        { level_three_sibling: "around fire after" },
+        { level_one: 200 },
+        { level_three_sibling: 200 }
       ])
     end
   end
