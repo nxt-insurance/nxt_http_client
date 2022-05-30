@@ -1,0 +1,37 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://ptsv2.com/t/nxt_http_client/post
+    body:
+      encoding: UTF-8
+      string: file_1=%23%3CFile%3A0x00007fcffa3266e0%3E&file_2=%23%3CFile%3A0x00007fcffa326528%3E
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: ''
+    headers:
+      Content-Type:
+      - text/plain; charset=utf-8
+      Vary:
+      - Accept-Encoding
+      Access-Control-Allow-Origin:
+      - "*"
+      X-Cloud-Trace-Context:
+      - 230f565795e6cb8fb81058cb358bc9ec
+      Date:
+      - Thu, 03 Jun 2021 22:06:42 GMT
+      Server:
+      - Google Frontend
+      Content-Length:
+      - '54'
+    body:
+      encoding: UTF-8
+      string: Thank you for this dump. I hope you have a lovely day!
+  recorded_at: Thu, 03 Jun 2021 22:06:42 GMT
+recorded_with: VCR 6.0.0
