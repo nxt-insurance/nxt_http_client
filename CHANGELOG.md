@@ -1,3 +1,6 @@
+# v1.0.3 2022-05-30
+- Fix bug where callbacks were shared between unrelated child client class ()
+
 # v1.0.3 2022-02-08
 
 - Relax dependency version constraints, allow activesupport < 8
