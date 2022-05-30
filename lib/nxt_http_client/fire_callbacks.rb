@@ -46,6 +46,11 @@ module NxtHttpClient
       callback_chain.call
     end
 
+    def initialize_copy(original)
+      @registry = original.instance_variable_get(:@registry).clone
+      super
+    end
+
     private
 
     attr_reader :registry
