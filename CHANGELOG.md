@@ -1,4 +1,4 @@
-# v1.0.3 2022-05-30
+# v1.1.0 2022-05-30
 - Fix bug where callbacks were shared between unrelated child client class ([#130](https://github.com/nxt-insurance/nxt_http_client/pull/130))
 
 # v1.0.3 2022-02-08
