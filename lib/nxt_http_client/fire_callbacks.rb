@@ -30,6 +30,10 @@ module NxtHttpClient
       end
     end
 
+    def any_around_callbacks?
+      registry.resolve(:around).any?
+    end
+
     def any_after_callbacks?
       registry.resolve(:after).any?
     end
