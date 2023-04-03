@@ -12,6 +12,7 @@ require 'nxt_http_client/fire_callbacks'
 require 'nxt_http_client/client_dsl'
 require 'nxt_http_client/client'
 require 'nxt_http_client/client/batch_patch'
+require 'nxt_http_client/batch_execution'
 require 'nxt_http_client/error'
 
 module NxtHttpClient
