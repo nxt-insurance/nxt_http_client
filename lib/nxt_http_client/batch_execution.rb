@@ -1,5 +1,5 @@
 module NxtHttpClient
-  def self.execute_in_batch(*client_instances, ignore_around_callbacks: false)
+  def self.execute_in_batch(*client_instances, ignore_around_callbacks: false, raise_errors: true)
     client_map = Hash.new do |hash, key|
       hash[key] = { request: nil, error: nil, result: nil }
     end
@@ -20,7 +20,7 @@ module NxtHttpClient
     hydra.run
 
     client_map.map do |client, response_data|
-      client.finish(response_data[:request], response_data[:result], response_data[:error])
+      client.finish(response_data[:request], response_data[:result], response_data[:error], raise_errors: raise_errors)
     end
   end
 end

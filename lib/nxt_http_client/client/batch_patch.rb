@@ -38,11 +38,17 @@ module NxtHttpClient
         request
       end
 
-      def finish(request, result, error)
+      def finish(request, result, error, raise_errors: true)
         result = run_after_fire_callbacks(request, request.response, result, error)
-        result || (raise error if error)
 
-        result
+        case [error, raise_errors]
+        in [nil, _]
+          result
+        in [_, true]
+          raise error
+        in [_, false]
+          error
+        end
       end
     end
   end

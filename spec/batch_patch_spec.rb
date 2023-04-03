@@ -1,64 +1,41 @@
 RSpec.describe NxtHttpClient::Client::BatchPatch do
-  let(:client_one_class) do
-    Class.new(NxtHttpClient::Client) do
-      attr_reader :cache
+  let(:client_classes) do
+    2.times.map do |iteration|
+      Class.new(NxtHttpClient::Client) do
+        attr_reader :cache, :specified_url
 
-      def initialize
-        @cache = []
-      end
-
-      configure do |config|
-        config.base_url = nil
-      end
-
-      response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
-        handler.on(200) do |_response|
-          'response in client 1'
+        def initialize
+          @cache = []
         end
-      end
 
-      before_fire do |_client, _request, _response_handler|
-        cache << 'before fire callback'
-      end
-
-      after_fire do |_client, _request, _response, result, _error|
-        cache << 'after fire callback'
-        result
-      end
-    end
-  end
-
-  let(:client_two_class) do
-    Class.new(NxtHttpClient::Client) do
-      attr_reader :cache
-
-      def initialize
-        @cache = []
-      end
-
-      configure do |config|
-        config.base_url = nil
-      end
-
-      response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
-        handler.on(200) do |_response|
-          'response in client 2'
+        configure do |config|
+          config.base_url = nil
         end
-      end
 
-      before_fire do |_client, _request, _response_handler|
-        cache << 'before fire callback'
-      end
+        response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
+          handler.on(200) do |_response|
+            "response in client #{iteration + 1}"
+          end
 
-      after_fire do |_client, _request, _response, result, _error|
-        cache << 'after fire callback'
-        result
+          handler.on(400) do |_response|
+            raise StandardError, "400 error"
+          end
+        end
+
+        before_fire do |_client, _request, _response_handler|
+          cache << 'before fire callback'
+        end
+
+        after_fire do |_client, _request, _response, result, _error|
+          cache << 'after fire callback'
+          result
+        end
       end
     end
   end
 
   subject do
-    client_instances = [client_one, client_two]
+    client_instances, client_urls = [client_one, client_two].transpose
 
     client_map = Hash.new do |hash, key|
       hash[key] = { request: nil, error: nil, result: nil }
@@ -70,7 +47,7 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
 
     hydra = Typhoeus::Hydra.new
 
-    client_instances.each do |client|
+    client_instances.zip(client_urls).each do |(client, url)|
       client.get(url).tap do |request|
         hydra.queue(request)
       end
@@ -79,24 +56,24 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
     hydra.run
 
     client_map.map do |client, response_data|
-      client.finish(response_data[:request], response_data[:result], response_data[:error])
+      client.finish(response_data[:request], response_data[:result], response_data[:error], raise_errors: raise_errors)
     end
   end
 
-  let(:client_one) { client_one_class.new }
-  let(:client_two) { client_two_class.new }
+  let(:client_one) { [client_classes[0].new, http_stats_url(200)] }
+  let(:client_two) { [client_classes[1].new, http_stats_url(200)] }
 
   let(:ignore_around_callbacks) { false }
-  let(:url) { http_stats_url('200') }
+  let(:raise_errors) { true }
 
   before do
-    [client_one, client_two].each { _1.singleton_class.include(NxtHttpClient::Client::BatchPatch) }
+    [client_one, client_two].each { |(instance, _)| instance.singleton_class.include(NxtHttpClient::Client::BatchPatch) }
   end
 
   context 'when around_fire callbacks are not defined', :vcr_cassette do
     it 'executes multiple requests in batch' do
       expect(subject).to eq(['response in client 1', 'response in client 2'])
-      [client_one, client_two].each do |client|
+      [client_one, client_two].each do |(client, _)|
         expect(client.cache).to eq(['before fire callback', 'after fire callback'])
       end
     end
@@ -104,10 +81,10 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
 
   context 'when around_fire callbacks are defined' do
     before do
-      [[client_one_class, '1'], [client_two_class, '2']].each do |client_class, client_id|
+      client_classes.each_with_index do |client_class, client_id|
         client_class.class_eval do
           around_fire do |_client, _request, _response_handler, _fire|
-            callback_map["client #{client_id}"] << 'around fire callback'
+            callback_map["client #{client_id + 1}"] << 'around fire callback'
           end
         end
       end
@@ -126,9 +103,30 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
 
       it 'allows execution without running around callbacks' do
         expect(subject).to eq(['response in client 1', 'response in client 2'])
-        [client_one, client_two].each do |client|
+        [client_one, client_two].each do |(client, _)|
           expect(client.cache).to eq(['before fire callback', 'after fire callback'])
         end
+      end
+    end
+  end
+
+  context 'when a request raises an error', :vcr_cassette do
+    let(:client_one) { [client_classes[0].new, http_stats_url(200)] }
+    let(:client_two) { [client_classes[1].new, http_stats_url(400)] }
+
+    context 'when raise_errors is set to true', :vcr_cassette do
+      let(:raise_errors) { true }
+
+      it 'executes the requests and raises the first encountered error' do
+        expect { subject }.to raise_error(StandardError, /400 error/)
+      end
+    end
+
+    context 'when raies_errors is set to false', :vcr_cassette do
+      let(:raise_errors) { false }
+
+      it 'executes the requests and returns the error as a member of an array of responses' do
+        expect(subject).to contain_exactly('response in client 1', instance_of(StandardError))
       end
     end
   end
