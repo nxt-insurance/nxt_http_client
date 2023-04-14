@@ -81,10 +81,11 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
 
   context 'when around_fire callbacks are defined' do
     before do
-      client_classes.each_with_index do |client_class, client_id|
+      client_classes.each_with_index do |client_class, _client_id|
         client_class.class_eval do
-          around_fire do |_client, _request, _response_handler, _fire|
-            callback_map["client #{client_id + 1}"] << 'around fire callback'
+          around_fire do |_client, _request, _response_handler, fire|
+            cache << 'around fire callback'
+            fire.call
           end
         end
       end
