@@ -6,8 +6,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/ruby:3.2.2-node
-      - image: circleci/redis:5.0.4
+      - image: cimg/ruby:3.2.2-node
+      - image: cimg/redis:5.0.4
     environment:
       BUNDLER_VERSION: 2.3.6
 
