@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       - image: cimg/ruby:3.2.2-node
-      - image: cimg/redis:5.0.4
+      - image: cimg/redis:6.0.16
     environment:
       BUNDLER_VERSION: 2.3.6
 
