@@ -1,3 +1,6 @@
+# v1.1.0 2023-04-03
+- Introduce a Typhoeus::Hydra interface for batch executions
+
 # v1.0.4 2022-06-08
 - Fix bug where callbacks were shared between unrelated child client class ([#130](https://github.com/nxt-insurance/nxt_http_client/pull/130))
 
