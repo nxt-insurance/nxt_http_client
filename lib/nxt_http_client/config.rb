@@ -10,6 +10,7 @@ module NxtHttpClient
 
     # Helper to add the request headers for JSON.
     # You still need to use JSON(response.body) or the JSON response_handler to get a JSON response.
+    # todo implement a JSON response handler that parses responses and raises errors
     def request_json
       self.request_options.deep_merge!(
         headers: { 'Content-Type': 'application/json', "Accept": 'application/json' }
