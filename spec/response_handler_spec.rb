@@ -4,6 +4,7 @@ RSpec.describe NxtHttpClient::Client do
       Class.new(NxtHttpClient::Client) do
         configure do |config|
           config.request_options = { followlocation: true }
+          config.timeout_seconds(total: 60)
         end
 
         response_handler do |handler|
@@ -26,6 +27,10 @@ RSpec.describe NxtHttpClient::Client do
   context 'when the callback is overwritten in the instance', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
+        configure do
+          config.timeout_seconds(total: 60)
+        end
+
         response_handler do |handler|
           handler.on(200) do |response|
             raise StandardError, 'This should not happen!'
@@ -59,6 +64,10 @@ RSpec.describe NxtHttpClient::Client do
     context ':success', :vcr_cassette do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
+          configure do
+            config.timeout_seconds(total: 60)
+          end
+
           response_handler do |handler|
             handler.on(:success) do |response|
               response.body
@@ -77,6 +86,10 @@ RSpec.describe NxtHttpClient::Client do
         Class.new(NxtHttpClient::Client) do
           def self.name
             'Test Client'
+          end
+
+          configure do
+            config.timeout_seconds(total: 60)
           end
 
           response_handler do |handler|
@@ -103,6 +116,10 @@ RSpec.describe NxtHttpClient::Client do
 
           attr_accessor :headers
 
+          configure do
+            config.timeout_seconds(total: 60)
+          end
+
           response_handler do |handler|
             handler.on(:headers) do |response|
               self.headers = response.headers
@@ -124,6 +141,10 @@ RSpec.describe NxtHttpClient::Client do
           end
 
           attr_accessor :chunks
+
+          configure do
+            config.timeout_seconds(total: 60)
+          end
 
           response_handler do |handler|
             handler.on(:body) do |chunk|

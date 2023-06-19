@@ -5,6 +5,7 @@ RSpec.describe NxtHttpClient::Client do
       configure do |config|
         config.base_url = 'httpstat.us'
         config.request_options = { method: :get }
+        config.timeout_seconds(total: 60)
       end
 
       response_handler do |handler|
@@ -29,7 +30,7 @@ RSpec.describe NxtHttpClient::Client do
 
   describe '.default_request_options' do
     it 'builds the request with the default options', :vcr_cassette do
-      expect(subject.call('200')).to eq(method: :get, cache: false, headers: {})
+      expect(subject.call('200')).to match(hash_including(method: :get, cache: false, headers: {}))
     end
   end
 
@@ -45,6 +46,7 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_headers = true
+          config.timeout_seconds(total: 60)
         end
       end
 
@@ -67,6 +69,7 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_headers = true
           config.bearer_auth = 'mytoken'
+          config.timeout_seconds(total: 60)
         end
       end
 
@@ -84,6 +87,7 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_headers = true
           config.basic_auth = 'myusername', 'mypassword'
+          config.timeout_seconds(total: 60)
         end
       end
 
@@ -94,7 +98,7 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.timeout' do
+  describe '.timeout_seconds' do
     around do |example|
       # Timeout doesn't work when replaying a VCR request
       WebMock.allow_net_connect!
@@ -115,6 +119,40 @@ RSpec.describe NxtHttpClient::Client do
         connecttimeout: 0.2,
       ))
     end
+
+    it 'does not override per-request timeout' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+          config.timeout_seconds(total: 0.5, connect: 0.2)
+        end
+      end
+
+      expect(client.build_request('', timeout: 10).options).to match(hash_including(
+        timeout: 10,
+        connecttimeout: 0.2,
+      ))
+    end
+
+    it 'raises an error if no timeout is configured' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+        end
+      end
+
+      expect { client.post('') }.to raise_error(ArgumentError, /timeout/)
+    end
+
+    it 'does not raise an error if timeout is set on the request' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+        end
+      end
+
+      expect { client.post('', timeout: 0.5) }.to_not raise_error
+    end
   end
 
   context 'inheritance' do
@@ -123,6 +161,7 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'httpstat.us'
           config.request_options.deep_merge!(headers: { token: 'level one token'})
+          config.timeout_seconds(total: 60)
         end
       end
     end

@@ -8,6 +8,7 @@ RSpec.describe NxtHttpClient do
       NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'httpstat.us'
+          config.timeout_seconds(total: 60)
         end
 
         response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
@@ -29,6 +30,7 @@ RSpec.describe NxtHttpClient do
       Class.new(NxtHttpClient::Client) do
         configure do |config|
           config.base_url = nil
+          config.timeout_seconds(total: 60)
         end
 
         response_handler(NxtHttpClient::ResponseHandler.new) do |handler|

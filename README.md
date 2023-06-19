@@ -192,6 +192,20 @@ requires the response for initialization. Furthermore it has a handy `to_h` meth
 the request and response.
 
 #### Timeouts
+**You must set a timeout on every request (or when configuring the client class).** 
+Otherwise, this gem will raise an error. The idea is to enforce the best practice 
+of [always setting a timeout](https://dev.to/bearer/the-importance-of-request-timeouts-l3n).
+
+To set a timeout, use the `timeout_seconds` config method:
+
+```rb
+configure do |config|
+  config.timeout_seconds(total: 10)
+  # You can also set a connect timeout
+  config.timeout_seconds(total: 10, connecttimeout: 2)
+end
+```
+
 NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. 
 This is useful when setting a custom timeout value in your configuration.
 

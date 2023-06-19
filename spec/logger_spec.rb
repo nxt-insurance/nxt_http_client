@@ -6,6 +6,7 @@ RSpec.describe NxtHttpClient::Logger do
         config.request_options = {
           headers: { Accept: "text/html", Token: 'my custom token' }
         }
+        config.timeout_seconds(total: 60)
       end
 
       response_handler do |handler|
