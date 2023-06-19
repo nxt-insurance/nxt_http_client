@@ -38,7 +38,7 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  context 'is switched off per default' do
+  context 'is switched off by default' do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
         response_handler do |handler|
@@ -53,7 +53,7 @@ RSpec.describe NxtHttpClient::Client do
       end
     end
 
-    it 'is switched off per default' do
+    it 'is switched off by default' do
       5.times do
         expect(subject.fire(http_status_url('200'))).to_not be_cached
       end
