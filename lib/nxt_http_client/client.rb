@@ -20,6 +20,8 @@ module NxtHttpClient
     end
 
     def build_request(url, **opts)
+      raise ArgumentError, 'You must configure a timeout for the client' unless timeout_configured?(opts)
+
       url = build_url(opts, url)
       opts = build_headers(opts)
 
@@ -173,6 +175,12 @@ module NxtHttpClient
 
     def callbacks
       @callbacks ||= self.class.callbacks
+    end
+
+    def timeout_configured?(opts)
+      return true if config.timeout_configured?
+
+      return [:timeout, :connecttimeout, :timeout_ms, :connecttimeout_ms].any? { opts.include?(:_1) }
     end
   end
 end

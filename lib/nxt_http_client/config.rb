@@ -37,6 +37,8 @@ module NxtHttpClient
       }.compact
 
       self.request_options.merge!(**timeouts)
+
+      @timeout_configured = true
     end
 
     def dup
@@ -44,5 +46,6 @@ module NxtHttpClient
     end
 
     def send_json? = @send_json
+    def timeout_configured? = @timeout_configured
   end
 end
