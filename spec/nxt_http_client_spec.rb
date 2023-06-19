@@ -3,6 +3,27 @@ RSpec.describe NxtHttpClient do
     expect(NxtHttpClient::VERSION).not_to be nil
   end
 
+  describe '.make', :vcr_cassette do
+    let(:client) do
+      NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us'
+        end
+
+        response_handler(NxtHttpClient::ResponseHandler.new) do |handler|
+          handler.on(200) do |response|
+            response.body
+          end
+        end
+      end
+    end
+
+    it 'returns an anonymous client' do
+      expect(client).to be_a(NxtHttpClient::Client)
+      expect(client.get('200')).to eq('200 OK')
+    end
+  end
+
   context 'http methods', :vcr_cassette do
     let(:client) do
       Class.new(NxtHttpClient::Client) do

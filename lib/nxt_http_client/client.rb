@@ -1,8 +1,23 @@
 module NxtHttpClient
+  # The entry point to this gem. The Client class is designed to be extended into custom base classes,
+  # but you can also create a one-off instance with the `.make` method.`
   class Client
     extend ClientDsl
+
     CACHE_STRATEGIES = %w[global thread].freeze
     HTTP_METHODS = %w[get post patch put delete head].freeze
+
+    # Get an anonymous client for one-off use. Example:
+    #
+    #   client = NxtHttpClient::Client.make do
+    #     configure do |config|
+    #       config.base_url = 'www.httpstat.us'
+    #     end
+    #   end
+    #   client.get('200')
+    def self.make(&block)
+      Class.new(self, &block).new
+    end
 
     def build_request(url, **opts)
       url = build_url(opts, url)
@@ -41,7 +56,7 @@ module NxtHttpClient
 
     HTTP_METHODS.each do |method|
       define_method method do |url = '', **opts, &block|
-        fire(url, **opts.reverse_merge(method: method), &block)
+        fire(url, **opts.reverse_merge(method:), &block)
       end
     end
 
