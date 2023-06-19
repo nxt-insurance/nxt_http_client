@@ -23,6 +23,10 @@ module NxtHttpClient
       url = build_url(opts, url)
       opts = build_headers(opts)
 
+      if opts[:body].is_a?(Hash) && config.send_json?
+        opts[:body] = opts[:body].to_json
+      end
+
       Typhoeus::Request.new(url, **opts.symbolize_keys)
     end
 

@@ -17,8 +17,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      def call(status)
-        fire(status)
+      def call(status, **opts)
+        fire(status, **opts)
       end
     end
   end
@@ -36,6 +36,90 @@ RSpec.describe NxtHttpClient::Client do
   describe '.base_url' do
     it 'builds the request with the base url', :vcr_cassette do
       expect(subject.call('400')).to eq("httpstat.us/400")
+    end
+  end
+
+  describe '.request_json' do
+    it 'sends the request with JSON data', :vcr_cassette do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.request_json
+        end
+      end
+
+      expect(client.send(:config).request_options[:headers]).to match(hash_including(
+        'Accept' => 'application/json',
+        'Content-Type' => 'application/json',
+      ))
+      response = client.post('post', body: { some: 'thing' })
+      expect(JSON(response.body)).to match(hash_including(
+        "json" => {
+          "some" => "thing"
+        }
+      ))
+    end
+  end
+
+  describe '.bearer_auth' do
+    it 'sets the correct Authorization header', :vcr_cassette do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.request_json
+          config.bearer_auth('mytoken')
+        end
+      end
+
+      expect(client.send(:config).request_options[:headers]).to match(hash_including(
+        'Authorization' => 'Bearer mytoken',
+      ))
+      response = client.post('post')
+      expect(JSON(response.body)['headers']).to match(hash_including(
+        'authorization' => 'Bearer mytoken',
+      ))
+    end
+  end
+
+  describe '.basic_auth' do
+    it 'sets the correct Authorization header', :vcr_cassette do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.request_json
+          config.basic_auth('myusername', 'mypassword')
+        end
+      end
+
+      response = client.post('post')
+      expect(JSON(response.body)['headers']).to match(hash_including(
+        'authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),
+      ))
+    end
+  end
+
+  describe '.timeout' do
+    around do |example|
+      # Timeout doesn't work when replaying a VCR reuqest
+      WebMock.allow_net_connect!
+      VCR.turned_off { example.run }
+      WebMock.disable_net_connect!
+    end
+
+    it 'sets the timeout correctly' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+          config.timeout_seconds(total: 0.5, connect: 0.2)
+        end
+      end
+
+      expect(client.send(:config).request_options).to match(hash_including(
+        timeout: 0.5,
+        connecttimeout: 0.2,
+      ))
+      response = client.post('post')
+      expect(response.timed_out?).to eq(true)
     end
   end
 
