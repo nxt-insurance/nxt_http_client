@@ -1,52 +1,37 @@
 module NxtHttpClient
-  CONFIGURABLE_OPTIONS = %i[request_options base_url x_request_id_proc].freeze
-
-  Config = Struct.new('Config', *CONFIGURABLE_OPTIONS) do
-    def initialize(request_options: ActiveSupport::HashWithIndifferentAccess.new, base_url: '', x_request_id_proc: nil)
-      self.request_options = request_options
-      self.base_url = base_url
-      self.x_request_id_proc = x_request_id_proc
-    end
-
+  CONFIGURABLE_OPTIONS = {
+    request_options: ActiveSupport::HashWithIndifferentAccess.new,
+    base_url: '',
+    x_request_id_proc: nil,
     # Helper to add the request headers for JSON.
     # You still need to use JSON(response.body) or the JSON response_handler to get a JSON response.
-    # todo implement a JSON response handler that parses responses and raises errors
-    def request_json
-      self.request_options.deep_merge!(
-        headers: { 'Content-Type': 'application/json', "Accept": 'application/json' }
-      )
+    # TODO: implement a JSON response handler that parses responses and raises errors
+    json_headers: false,
+    bearer_auth: nil,
+    basic_auth: nil,
+    timeouts: nil,
+  }.freeze
 
-      @send_json = true
-    end
-
-    def basic_auth(username, password)
-      self.request_options.merge!(
-        userpwd: "#{username}:#{password}"
-      )
-    end
-
-    def bearer_auth(token)
-      self.request_options.deep_merge!(
-        headers: { 'Authorization': "Bearer #{token}" }
-      )
+  Config = Struct.new('Config', *CONFIGURABLE_OPTIONS.keys) do
+    def initialize
+      CONFIGURABLE_OPTIONS.each do |key, default_value|
+        self.send(:"#{key}=", default_value.dup)
+      end
     end
 
     def timeout_seconds(total: nil, connect: nil)
-      timeouts = {
-        timeout: total,
-        connecttimeout: connect
-      }.compact
+      timeouts = { total:, connect:, }.compact
 
-      self.request_options.merge!(**timeouts)
-
-      @timeout_configured = true
+      self.timeouts = timeouts
     end
 
     def dup
-      self.class.new(**to_h.deep_dup)
+      options = to_h
+      self.class.new.tap do |instance|
+        options.each do |key, value|
+          instance.send(:"#{key}=", value.dup)
+        end
+      end
     end
-
-    def send_json? = @send_json
-    def timeout_configured? = @timeout_configured
   end
 end

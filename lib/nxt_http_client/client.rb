@@ -25,8 +25,12 @@ module NxtHttpClient
       url = build_url(opts, url)
       opts = build_headers(opts)
 
-      if opts[:body].is_a?(Hash) && config.send_json?
-        opts[:body] = opts[:body].to_json
+      if (timeouts = config.timeouts).is_a?(Hash)
+        opts.merge!(timeout: timeouts[:total], connecttimeout: timeouts[:connect])
+      end
+
+      if opts[:body].is_a?(Hash) && config.json_headers
+        opts[:body] = opts[:body].to_json # Typhoeus requires userland JSON encoding
       end
 
       Typhoeus::Request.new(url, **opts.symbolize_keys)
@@ -79,6 +83,23 @@ module NxtHttpClient
     def build_headers(opts)
       opts = config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
+
+      if config.json_headers
+        opts[:headers].merge!({
+          'Content-Type' => ApplicationJson, 'Accept' => ApplicationJson
+        })
+      end
+
+      if config.basic_auth
+        raise ArgumentError, 'basic_auth must be a tuple of username and password' if config.basic_auth.size != 2
+
+        username, password = config.basic_auth
+        opts.merge!(userpwd: "#{username}:#{password}")
+      elsif (bearer_token = config.bearer_auth)
+        opts[:headers].merge!({
+          'Authorization' => "Bearer #{bearer_token}"
+        })
+      end
 
       if config.x_request_id_proc
         opts[:headers][XRequestId] ||= config.x_request_id_proc.call
