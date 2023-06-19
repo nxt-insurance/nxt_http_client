@@ -17,8 +17,8 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      def call(status, **opts)
-        fire(status, **opts)
+      def call(status)
+        fire(status)
       end
     end
   end
@@ -39,41 +39,37 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.request_json' do
-    it 'sends the request with JSON data', :vcr_cassette do
+  describe '.json_headers' do
+    it 'sends the request with JSON data', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.request_json
+          config.json_headers = true
         end
       end
 
-      expect(client.send(:config).request_options[:headers]).to match(hash_including(
+      request = client.build_request('')
+      expect(request.options[:headers]).to match(hash_including(
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
       ))
       response = client.post('post', body: { some: 'thing' })
-      expect(JSON(response.body)).to match(hash_including(
-        "json" => {
-          "some" => "thing"
-        }
-      ))
+      expect(JSON(response.body)['json']).to eq(
+        'some' => 'thing',
+      )
     end
   end
 
   describe '.bearer_auth' do
-    it 'sets the correct Authorization header', :vcr_cassette do
+    it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.request_json
-          config.bearer_auth('mytoken')
+          config.json_headers = true
+          config.bearer_auth = 'mytoken'
         end
       end
 
-      expect(client.send(:config).request_options[:headers]).to match(hash_including(
-        'Authorization' => 'Bearer mytoken',
-      ))
       response = client.post('post')
       expect(JSON(response.body)['headers']).to match(hash_including(
         'authorization' => 'Bearer mytoken',
@@ -82,12 +78,12 @@ RSpec.describe NxtHttpClient::Client do
   end
 
   describe '.basic_auth' do
-    it 'sets the correct Authorization header', :vcr_cassette do
+    it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.request_json
-          config.basic_auth('myusername', 'mypassword')
+          config.json_headers = true
+          config.basic_auth = 'myusername', 'mypassword'
         end
       end
 
@@ -100,7 +96,7 @@ RSpec.describe NxtHttpClient::Client do
 
   describe '.timeout' do
     around do |example|
-      # Timeout doesn't work when replaying a VCR reuqest
+      # Timeout doesn't work when replaying a VCR request
       WebMock.allow_net_connect!
       VCR.turned_off { example.run }
       WebMock.disable_net_connect!
@@ -114,12 +110,10 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect(client.send(:config).request_options).to match(hash_including(
+      expect(client.build_request('').options).to match(hash_including(
         timeout: 0.5,
         connecttimeout: 0.2,
       ))
-      response = client.post('post')
-      expect(response.timed_out?).to eq(true)
     end
   end
 

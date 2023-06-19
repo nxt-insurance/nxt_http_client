@@ -32,10 +32,12 @@ client = NxtHttpClient::Client.make do
       headers: { API_KEY: '1993' },
       followlocation: true
     )
+    config.json_headers = true
   end
 end
 
 client.get('200')
+client.post('200', body: { some: 'content'})
 ```
 
 This is good when you need a one-off client to make some quick API calls. 
@@ -48,10 +50,8 @@ class UserServiceClient < NxtHttpClient::Client
   # Set a base URL, and any other request options you need
   configure do |config|
     config.base_url = 'www.example.com'
-    config.request_options.deep_merge!(
-      headers: { API_KEY: '1993' },
-      followlocation: true
-    )
+    config.json_headers = true
+    config.bearer_auth = ENV['USER_SERVICE_API_TOKEN']
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join }
   end
 

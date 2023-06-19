@@ -21,15 +21,15 @@ http_interactions:
       message: ''
     headers:
       Date:
-      - Mon, 19 Jun 2023 17:19:36 GMT
+      - Mon, 19 Jun 2023 23:18:17 GMT
       Content-Type:
       - application/json; charset=utf-8
       Content-Length:
       - '515'
       Etag:
-      - W/"203-l28jSrwlCG3BtC9VSuht1Sp0BJM"
+      - W/"203-Og50oIFW8RPv7V62cL8GoP5NVRU"
       Set-Cookie:
-      - sails.sid=s%3AKVAQEF4VyrOEJHSMwmvN9_RpcKJL_5fm.2JVPHyCbJJ9UGKJJU0mrUqA5PPEtNET6iT2QkyTzJ10;
+      - sails.sid=s%3AlOcwtKJdT0EwlkqGMFVTXwd_gIJug1BK.OJ9ip%2F7l%2FGA%2BJ%2FVFtLfmHNZ1d3tc6hf2FuFXC7zA3Qo;
         Path=/; HttpOnly
     body:
       encoding: ASCII-8BIT
@@ -45,7 +45,7 @@ http_interactions:
             "x-forwarded-proto": "https",
             "x-forwarded-port": "443",
             "host": "postman-echo.com",
-            "x-amzn-trace-id": "Root=1-64908e28-1f46b094639eb2fd3b46fbd2",
+            "x-amzn-trace-id": "Root=1-6490e239-2b69c018176933f20568fe2e",
             "content-length": "16",
             "user-agent": "Typhoeus - https://github.com/typhoeus/typhoeus",
             "content-type": "application/json",
@@ -56,5 +56,5 @@ http_interactions:
           },
           "url": "https://postman-echo.com/post"
         }
-  recorded_at: Mon, 19 Jun 2023 17:19:36 GMT
+  recorded_at: Mon, 19 Jun 2023 23:18:17 GMT
 recorded_with: VCR 6.1.0
