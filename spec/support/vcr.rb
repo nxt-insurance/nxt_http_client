@@ -7,7 +7,7 @@ VCR.configure do |config|
   config.default_cassette_options = {
     decode_compressed_response: true,
     match_requests_on: [:method, :uri],
-    # record: :once,
+    # record: :new_episodes,
     update_content_length_header: true
   }
 end

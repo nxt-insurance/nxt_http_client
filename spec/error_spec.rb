@@ -30,7 +30,7 @@ RSpec.describe NxtHttpClient::Error do
     end
 
     subject do
-      client.new.fire(http_stats_url('503'))
+      client.new.fire(http_status_url('503'))
     end
 
     it 'responds to all methods', :vcr_cassette do
