@@ -81,20 +81,17 @@ module NxtHttpClient
       opts[:headers] ||= {}
 
       if config.json_headers
-        opts[:headers].merge!({
-          'Content-Type' => ApplicationJson, 'Accept' => ApplicationJson
-        })
+        opts[:headers]['Content-Type'] ||= ApplicationJson
+        opts[:headers]['Accept'] ||= ApplicationJson
       end
 
       if config.basic_auth
         raise ArgumentError, 'basic_auth must be a tuple of username and password' if config.basic_auth.size != 2
 
         username, password = config.basic_auth
-        opts.merge!(userpwd: "#{username}:#{password}")
+        opts[:userpwd] ||= "#{username}:#{password}"
       elsif (bearer_token = config.bearer_auth)
-        opts[:headers].merge!({
-          'Authorization' => "Bearer #{bearer_token}"
-        })
+        opts[:headers]['Authorization'] ||= "Bearer #{bearer_token}"
       end
 
       if config.x_request_id_proc
