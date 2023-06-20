@@ -41,7 +41,7 @@ client.post('200', body: { some: 'content'})
 ```
 
 This is good when you need a one-off client to make some quick API calls. 
-The true power of NxtHttpClient is in creating custom client classes with shared configuration,
+However, you can go further by creating custom client classes with shared configuration,
 and customizing them as needed.
 For example, you could have a base client for interacting with a specific service:
 
