@@ -3,10 +3,13 @@ module NxtHttpClient
     request_options: ActiveSupport::HashWithIndifferentAccess.new,
     base_url: '',
     x_request_id_proc: nil,
-    # Helper to add the request headers for JSON.
-    # You still need to use JSON(response.body) or the JSON response_handler to get a JSON response.
-    # TODO: implement a JSON response handler that parses responses and raises errors
-    json_headers: false,
+
+    # Helper to set the Content-Type request header and automatically convert request bodies to JSON
+    json_request: false,
+    # Helper to set the Accept request header and automatically convert success response bodies to JSON
+    json_response: false,
+    raise_response_errors: false,
+
     bearer_auth: nil,
     basic_auth: nil,
     timeouts: nil,

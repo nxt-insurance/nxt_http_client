@@ -25,7 +25,7 @@ module NxtHttpClient
 
       set_timeouts(opts)
 
-      if opts[:body].is_a?(Hash) && config.json_headers
+      if opts[:body].is_a?(Hash) && config.json_request
         opts[:body] = opts[:body].to_json # Typhoeus requires userland JSON encoding
       end
 
@@ -80,10 +80,8 @@ module NxtHttpClient
       opts = config.request_options.with_indifferent_access.deep_merge(opts.with_indifferent_access)
       opts[:headers] ||= {}
 
-      if config.json_headers
-        opts[:headers]['Content-Type'] ||= ApplicationJson
-        opts[:headers]['Accept'] ||= ApplicationJson
-      end
+      opts[:headers]['Content-Type'] ||= ApplicationJson if config.json_request
+      opts[:headers]['Accept'] ||= ApplicationJson if config.json_response
 
       if config.basic_auth
         raise ArgumentError, 'basic_auth must be a tuple of username and password' if config.basic_auth.size != 2
@@ -94,9 +92,7 @@ module NxtHttpClient
         opts[:headers]['Authorization'] ||= "Bearer #{bearer_token}"
       end
 
-      if config.x_request_id_proc
-        opts[:headers][XRequestId] ||= config.x_request_id_proc.call
-      end
+      opts[:headers][XRequestId] ||= config.x_request_id_proc.call if config.x_request_id_proc
 
       build_cache_header(opts)
       opts
@@ -151,6 +147,26 @@ module NxtHttpClient
 
     def build_response_handler(handler, &block)
       response_handler = handler || dup_handler_from_class || NxtHttpClient::ResponseHandler.new
+
+      if config.json_response
+        response_handler.configure do |handler|
+          handler.on(:success) do |response|
+            response.define_singleton_method(:body) { JSON(response.response_body) }
+            response
+          end
+        end
+      end
+
+      if config.raise_response_errors
+        response_handler.configure do |handler|
+          handler.on(:error) do |response|
+            error = NxtHttpClient::Error.new(response)
+            ::Sentry.set_extras(error_details: error.to_h) if defined?(::Sentry)
+            raise error
+          end
+        end
+      end
+
       response_handler.configure(&block) if block_given?
       response_handler
     end
