@@ -52,8 +52,6 @@ module NxtHttpClient
       @response_handler
     end
 
-    alias_method :response_handler, :response_handler
-
     private
 
     def client_ancestors
