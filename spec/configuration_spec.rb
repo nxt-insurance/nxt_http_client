@@ -39,18 +39,17 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.json_headers' do
-    it 'sends the request with JSON data', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+  describe '.json_request' do
+    it 'sends the request as JSON when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.json_headers = true
+          config.json_request = true
         end
       end
 
       request = client.build_request('')
       expect(request.options[:headers]).to match(hash_including(
-        'Accept' => 'application/json',
         'Content-Type' => 'application/json',
       ))
       response = client.post('post', body: { some: 'thing' })
@@ -58,14 +57,31 @@ RSpec.describe NxtHttpClient::Client do
         'some' => 'thing',
       )
     end
-  end
 
-  describe '.json_response' do
-    it 'parses the response body as JSON', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+    it 'does not send the request as JSON when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.json_headers = true
+          config.json_request = false
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to_not match(hash_including(
+        'Content-Type' => 'application/json',
+      ))
+      response = client.post('post', body: { some: 'thing' })
+      expect(JSON(response.body)['form']).to eq(
+        'some' => 'thing',
+      )
+    end
+  end
+
+  describe '.json_response' do
+    it 'parses the response body as JSON when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
           config.json_response = true
         end
       end
@@ -74,11 +90,60 @@ RSpec.describe NxtHttpClient::Client do
       expect(request.options[:headers]).to match(hash_including(
         'Accept' => 'application/json',
       ))
-      response = client.post('post', body: { some: 'thing' })
+      response = client.post('post')
       expect(response.body).to be_a(Hash)
-      expect(response.body['json']).to eq(
-        'some' => 'thing',
-      )
+    end
+
+    it 'does not parse the response body as JSON when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = false
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to_not match(hash_including(
+        'Accept' => 'application/json',
+      ))
+      response = client.post('post')
+      expect(response.body).to be_a(String)
+    end
+  end
+
+  describe '.raise_response_errors' do
+    it 'raises an error for non-success responses when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = true
+          config.raise_response_errors = true
+        end
+      end
+
+      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error, /NxtHttpClient::Error::400/) do |error|
+        expect(error.response.body).to be_a(String)
+        expect(JSON(error.response.body)).to eq({
+          'status' => 400
+        })
+      end
+    end
+
+    it 'does not raise an error for non-success responses when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = true
+          config.raise_response_errors = false
+        end
+      end
+
+      response = client.get('/status/400')
+      expect(response.body).to be_a(String)
+
+      expect(JSON(response.body)).to eq({
+        'status' => 400
+      })
     end
   end
 
@@ -87,7 +152,7 @@ RSpec.describe NxtHttpClient::Client do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.json_headers = true
+          config.json_request = true
           config.bearer_auth = 'mytoken'
         end
       end
@@ -104,7 +169,7 @@ RSpec.describe NxtHttpClient::Client do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
-          config.json_headers = true
+          config.json_request = true
           config.basic_auth = 'myusername', 'mypassword'
         end
       end

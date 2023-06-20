@@ -1,0 +1,39 @@
+---
+http_interactions:
+- request:
+    method: get
+    uri: https://postman-echo.com/status/400
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Accept:
+      - application/json
+      Expect:
+      - ''
+  response:
+    status:
+      code: 400
+      message: ''
+    headers:
+      Date:
+      - Tue, 20 Jun 2023 17:16:50 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '19'
+      Etag:
+      - W/"13-lfYngUxxx/DaojmsQYiQMQYhV2Q"
+      Set-Cookie:
+      - sails.sid=s%3AuFAzLgX2llwTYGyB7P9111RzeoraIGvL.7yPHv3pgW19n8VBEDC3kgJb9ekRhFUa%2Bk5%2Fgp7rlz3k;
+        Path=/; HttpOnly
+    body:
+      encoding: ASCII-8BIT
+      string: |-
+        {
+          "status": 400
+        }
+  recorded_at: Tue, 20 Jun 2023 17:16:50 GMT
+recorded_with: VCR 6.1.0
