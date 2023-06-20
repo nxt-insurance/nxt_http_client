@@ -60,6 +60,28 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
+  describe '.json_response' do
+    it 'parses the response body as JSON', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_headers = true
+          config.json_response = true
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to match(hash_including(
+        'Accept' => 'application/json',
+      ))
+      response = client.post('post', body: { some: 'thing' })
+      expect(response.body).to be_a(Hash)
+      expect(response.body['json']).to eq(
+        'some' => 'thing',
+      )
+    end
+  end
+
   describe '.bearer_auth' do
     it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
       client = NxtHttpClient::Client.make do

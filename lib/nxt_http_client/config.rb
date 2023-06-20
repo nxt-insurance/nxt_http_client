@@ -5,8 +5,8 @@ module NxtHttpClient
     x_request_id_proc: nil,
     # Helper to add the request headers for JSON.
     # You still need to use JSON(response.body) or the JSON response_handler to get a JSON response.
-    # TODO: implement a JSON response handler that parses responses and raises errors
     json_headers: false,
+    json_response: false,
     bearer_auth: nil,
     basic_auth: nil,
     timeouts: nil,
