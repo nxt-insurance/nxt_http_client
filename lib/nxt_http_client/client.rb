@@ -144,6 +144,16 @@ module NxtHttpClient
 
     def build_response_handler(handler, &block)
       response_handler = handler || dup_handler_from_class || NxtHttpClient::ResponseHandler.new
+
+      if config.json_response
+        response_handler.configure do |handler|
+          handler.on(:success) do |response|
+            response.options[:body] = JSON(response.body)
+            response
+          end
+        end
+      end
+
       response_handler.configure(&block) if block_given?
       response_handler
     end
