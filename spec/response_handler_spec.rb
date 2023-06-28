@@ -139,7 +139,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       it 'runs the on body callback' do
-        expect(subject.fire(http_stats_url('200'))).to eq('body')
+        expect(subject.fire(http_status_url('200'))).to eq('body')
       end
     end
   end

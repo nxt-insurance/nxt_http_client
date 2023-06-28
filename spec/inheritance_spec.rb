@@ -180,7 +180,7 @@ RSpec.describe NxtHttpClient::Client do
         'headers' => expected_request_options
       )
 
-      result = level_four_client.put(http_stats_url('503'))
+      result = level_four_client.put(http_status_url('503'))
 
       expect(result.request.original_options[:headers]).to eq(headers[:headers])
     end
@@ -214,7 +214,7 @@ RSpec.describe NxtHttpClient::Client do
 
   context 'resetting the response handler on class level', :vcr_cassette do
     it 'does not inherit callbacks from the super class' do
-      expect(level_four.new.fire(http_stats_url('404'))).to eq('4** from level four class level')
+      expect(level_four.new.fire(http_status_url('404'))).to eq('4** from level four class level')
     end
   end
 

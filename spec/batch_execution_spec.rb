@@ -35,13 +35,13 @@ RSpec.describe 'batch execution' do
     end
   end
 
-  let(:client_one) { client_classes[0].new(http_stats_url('200')) }
-  let(:client_two) { client_classes[1].new(http_stats_url('200')) }
-  let(:client_three) { client_classes[2].new(http_stats_url('200')) }
+  let(:client_one) { client_classes[0].new(http_status_url('200')) }
+  let(:client_two) { client_classes[1].new(http_status_url('200')) }
+  let(:client_three) { client_classes[2].new(http_status_url('200')) }
 
   let(:ignore_around_callbacks) { false }
   let(:raise_errors) { true }
-  let(:url) { http_stats_url('200') }
+  let(:url) { http_status_url('200') }
 
   subject do
     NxtHttpClient.execute_in_batch(
@@ -58,9 +58,9 @@ RSpec.describe 'batch execution' do
   end
 
   context 'when one of the requests raises an error' do
-    let(:client_one) { client_classes[0].new(http_stats_url('400')) }
-    let(:client_two) { client_classes[1].new(http_stats_url('404')) }
-    let(:client_three) { client_classes[2].new(http_stats_url('200')) }
+    let(:client_one) { client_classes[0].new(http_status_url('400')) }
+    let(:client_two) { client_classes[1].new(http_status_url('404')) }
+    let(:client_three) { client_classes[2].new(http_status_url('200')) }
 
     context 'with raise_errors argument set to true', :vcr_cassette do
       let(:raise_errors) { true }

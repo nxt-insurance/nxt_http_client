@@ -22,7 +22,7 @@ RSpec.describe NxtHttpClient do
       client.new
     end
 
-    let(:url) { http_stats_url('200') }
+    let(:url) { http_status_url('200') }
 
     it 'calls fire with the respective http method' do
       expect(subject.post(url, params: { andy: 'calling' })).to eq('200 from level four class level')

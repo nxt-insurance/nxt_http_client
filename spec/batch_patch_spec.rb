@@ -60,8 +60,8 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
     end
   end
 
-  let(:client_one) { [client_classes[0].new, http_stats_url(200)] }
-  let(:client_two) { [client_classes[1].new, http_stats_url(200)] }
+  let(:client_one) { [client_classes[0].new, http_status_url(200)] }
+  let(:client_two) { [client_classes[1].new, http_status_url(200)] }
 
   let(:ignore_around_callbacks) { false }
   let(:raise_errors) { true }
@@ -112,8 +112,8 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
   end
 
   context 'when a request raises an error', :vcr_cassette do
-    let(:client_one) { [client_classes[0].new, http_stats_url(200)] }
-    let(:client_two) { [client_classes[1].new, http_stats_url(400)] }
+    let(:client_one) { [client_classes[0].new, http_status_url(200)] }
+    let(:client_two) { [client_classes[1].new, http_status_url(400)] }
 
     context 'when raise_errors is set to true', :vcr_cassette do
       let(:raise_errors) { true }
