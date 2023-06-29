@@ -22,26 +22,7 @@ bundle
 
 ## Usage
 
-Here's a simple HTTP client with this gem:
-
-```ruby
-client = NxtHttpClient::Client.make do 
-  configure do |config|
-    config.base_url = 'www.httpstat.us'
-    config.request_options.deep_merge!(
-      headers: { API_KEY: '1993' },
-      followlocation: true
-    )
-  end
-end
-
-client.get('200')
-```
-
-This is good when you need a one-off client to make some quick API calls. 
-However, you can go further by creating custom client classes with shared configuration,
-and customizing them as needed.
-For example, you could have a base client for interacting with a specific service:
+With NxtHttpClient, you can create client classes for interacting with external services:
 
 ```ruby
 class UserServiceClient < NxtHttpClient::Client
@@ -105,6 +86,22 @@ Usage:
 client = UserFetcher.new('1234')
 client.fetch_email
 client.fetch_user_details
+```
+
+However, if you need a simple ad hoc client for a one-off task, you can use `.make` to instantiate one.
+
+```ruby
+client = NxtHttpClient::Client.make do 
+  configure do |config|
+    config.base_url = 'www.httpstat.us'
+    config.request_options.deep_merge!(
+      headers: { API_KEY: '1993' },
+      followlocation: true
+    )
+  end
+end
+
+client.get('200')
 ```
 
 ### configure
