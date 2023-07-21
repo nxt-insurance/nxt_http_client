@@ -1,9 +1,8 @@
 # NxtHttpClient
 
-Build http clients with ease. NxtHttpClient is a simple DSL on top of the [typhoeus](https://github.com/typhoeus/typhoeus)
-gem. NxtHttpClient mostly provides you a simple configuration functionality to setup http connections on the class level.
-Furthermore it's mostly a callback framework that allows you to seamlessly handle your responses. Since it's is just a simple
-layer on top of [typhoeus](https://github.com/typhoeus/typhoeus) it also allows to access and configure the original
+Build http clients with ease. NxtHttpClient is a DSL on top of the [typhoeus](https://github.com/typhoeus/typhoeus)
+gem. NxtHttpClient provides configuration functionality to set up HTTP connections on the class level, and attach
+callbacks that allow you to seamlessly handle responses, as well as configure the original
 `Typhoeus::Request` before making a request.
 
 
@@ -17,96 +16,92 @@ gem 'nxt_http_client'
 
 And then execute:
 
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install nxt_http_client
+```sh
+bundle
+````
 
 ## Usage
 
-A typical client could look something like this:
+With NxtHttpClient, you can create client classes for interacting with external services:
 
 ```ruby
-class UserFetcher < Client
-  def initialize(id)
-    @url = ".../users/#{id}"
-  end
-
-  def call
-    get(url) do |response_handler|
-      response_handler.on(:success) do |response|
-        JSON(response.body)
-      end
-    end
-  end
-
-  private
-
-  attr_reader :url
-end
-```
-
-In order to setup a shared configuration you would therefore setup a client base class. The configuration and any
-response handler or callbacks you setup in your base class are then inherited to your concrete client implementations.
-
-```ruby
-class Client < NxtHttpClient
+class UserServiceClient < NxtHttpClient::Client
+  # Set a base URL, and any other request options you need
   configure do |config|
     config.base_url = 'www.example.com'
     config.request_options.deep_merge!(
       headers: { API_KEY: '1993' },
-      method: :get,
       followlocation: true
     )
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join }
   end
 
+  # You may add a log handler if you wish...
   log do |info|
     Rails.logger.info(info)
   end
 
+  # ...as well as a response handler
   response_handler do |handler|
     handler.on(:error) do |response|
-      Raven.extra_context(error_details: error.to_h)
+      Sentry.set_extras(error_details: error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
 end
 ```
 
-### HTTP Methods
-
-In order to build a request and execute it NxtHttpClient implements all http standard methods.
+and then child classes for accessing specific endpoints and adding custom behaviours.
 
 ```ruby
-class Client < NxtHttpClient
-  def initialize(url)
-    @url = url
+class UserFetcher < UserServiceClient
+  def initialize(id)
+    @url = ".../users/#{id}"
   end
 
-  attr_reader :url
-
-  def fetch
-    get(url) do
-      handler.on(:success) { |response| response.body }
+  def fetch_email
+    get(url, { fields: :email }) do |response_handler|
+      response_handler.on(:success) do |response|
+        JSON(response.body)['email']
+      end
     end
   end
 
-  def create(params)
-    post(url, params: params) do
-      handler.on(:success) { |response| response.body }
+  def fetch_user_details
+    get(url) do |response_handler|
+      response_handler.on(:success) do |response|
+        body = JSON(response.body)
+        User.new(body)
+      end
     end
   end
 
-  def update(params)
-    put(url, params: params) do
-      handler.on(:success) { |response| response.body }
-    end
-  end
-
-  # ... there are others as you know ...
+  private attr_reader :url
 end
+```
+
+Usage:
+
+```ruby
+client = UserFetcher.new('1234')
+client.fetch_email
+client.fetch_user_details
+```
+
+However, if you need a simple ad hoc client for a one-off task, you can use `.make` to instantiate one.
+
+```ruby
+client = NxtHttpClient::Client.make do 
+  configure do |config|
+    config.base_url = 'www.httpstat.us'
+    config.request_options.deep_merge!(
+      headers: { API_KEY: '1993' },
+      followlocation: true
+    )
+  end
+end
+
+client.get('200')
 ```
 
 ### configure
@@ -121,7 +116,7 @@ on the instance level.
 
 ### fire
 
-All http methods internally are delegate to `fire('uri', **request_options)`. Since `fire` is a public method you can
+All http methods internally are delegate to `fire(uri, **request_options)`. Since `fire` is a public method you can
 also use it to fire your requests and use the response handler to register callbacks for specific responses.
 
 Registered callbacks have a hierarchy by which they are executed. Specific callbacks will come first
@@ -194,7 +189,8 @@ requires the response for initialization. Furthermore it has a handy `to_h` meth
 the request and response.
 
 #### Timeouts
-NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. This is useful when setting a custom timeout value in your configuration.
+NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. 
+This is useful when setting a custom timeout value in your configuration.
 
 ### Logging
 
