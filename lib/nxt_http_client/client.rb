@@ -86,9 +86,11 @@ module NxtHttpClient
       opts[:headers]['Accept'] ||= ApplicationJson if config.json_response
 
       if config.basic_auth
-        raise ArgumentError, 'basic_auth must be a tuple of username and password' if config.basic_auth.size != 2
-
-        username, password = config.basic_auth
+        begin
+          config.basic_auth => { username:, password: }
+        rescue NoMatchingPatternKeyError
+          raise ArgumentError, 'basic_auth must be a Hash with :username and :password'
+        end
         opts[:userpwd] ||= "#{username}:#{password}"
       elsif (bearer_token = config.bearer_auth)
         opts[:headers]['Authorization'] ||= "Bearer #{bearer_token}"
