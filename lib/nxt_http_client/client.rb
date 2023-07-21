@@ -27,7 +27,7 @@ module NxtHttpClient
         opts.merge!(timeout: timeouts[:total], connecttimeout: timeouts[:connect])
       end
 
-      if opts[:body].is_a?(Hash) && config.json_request
+      if config.json_request
         opts[:body] = opts[:body].to_json # Typhoeus requires userland JSON encoding
       end
 
