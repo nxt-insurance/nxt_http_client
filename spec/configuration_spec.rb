@@ -30,7 +30,7 @@ RSpec.describe NxtHttpClient::Client do
 
   describe '.default_request_options' do
     it 'builds the request with the default options', :vcr_cassette do
-      expect(subject.call('200')).to match(hash_including(method: :get, cache: false, headers: {}))
+      expect(subject.call('200')).to include(method: :get, cache: false, headers: {})
     end
   end
 
@@ -51,9 +51,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to match(hash_including(
-        'Content-Type' => 'application/json',
-      ))
+      expect(request.options[:headers]).to include('Content-Type' => 'application/json',)
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['json']).to eq(
         'some' => 'thing',
@@ -70,9 +68,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not match(hash_including(
-        'Content-Type' => 'application/json',
-      ))
+      expect(request.options[:headers]).to_not include('Content-Type' => 'application/json',)
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['form']).to eq(
         'some' => 'thing',
@@ -91,9 +87,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to match(hash_including(
-        'Accept' => 'application/json',
-      ))
+      expect(request.options[:headers]).to include('Accept' => 'application/json',)
       response = client.post('post')
       expect(response.body).to be_a(Hash)
     end
@@ -108,9 +102,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not match(hash_including(
-        'Accept' => 'application/json',
-      ))
+      expect(request.options[:headers]).to_not include('Accept' => 'application/json',)
       response = client.post('post')
       expect(response.body).to be_a(String)
     end
@@ -166,9 +158,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to match(hash_including(
-        'authorization' => 'Bearer mytoken',
-      ))
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Bearer mytoken',)
     end
   end
 
@@ -184,9 +174,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to match(hash_including(
-        'authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),
-      ))
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),)
     end
 
     it 'raises an error for invalid config', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
@@ -218,10 +206,10 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect(client.build_request('').options).to match(hash_including(
+      expect(client.build_request('').options).to include(
         timeout: 0.5,
         connecttimeout: 0.2,
-      ))
+      )
     end
 
     it 'does not override per-request timeout' do
@@ -232,10 +220,10 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect(client.build_request('', timeout: 10).options).to match(hash_including(
+      expect(client.build_request('', timeout: 10).options).to include(
         timeout: 10,
         connecttimeout: 0.2,
-      ))
+      )
     end
 
     it 'raises an error if no timeout is configured' do

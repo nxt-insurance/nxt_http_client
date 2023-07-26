@@ -41,14 +41,14 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.body).to eq('503 Service Unavailable')
       expect(subject.url).to eq('httpstat.us/503')
       expect(subject.request).to be_a(Typhoeus::Request)
-      expect(subject.request_options).to match(hash_including('headers'=>{}, 'cache'=>false))
+      expect(subject.request_options).to include('headers'=>{}, 'cache'=>false)
       expect(subject.request_headers).to eq({})
-      expect(subject.response_options).to match(hash_including(
+      expect(subject.response_options).to include(
         'code' => 503,
         'status_message' => 'Service Unavailable',
         'body' => '503 Service Unavailable'
-      ))
-      expect(subject.response_headers).to match(hash_including('Content-Type' => 'text/plain; charset=utf-8'))
+      )
+      expect(subject.response_headers).to include('Content-Type' => 'text/plain; charset=utf-8')
       expect(subject.response_content_type).to eq('text/plain; charset=utf-8')
 
       expect(subject.to_h.keys).to match_array(
