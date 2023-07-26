@@ -22,38 +22,19 @@ bundle
 
 ## Usage
 
-Here's a simple HTTP client with this gem:
-
-```ruby
-client = NxtHttpClient::Client.make do 
-  configure do |config|
-    config.base_url = 'www.httpstat.us'
-    config.request_options.deep_merge!(
-      headers: { API_KEY: '1993' },
-      followlocation: true
-    )
-    config.json_request = true
-    config.json_response = true
-  end
-end
-
-client.get('200')
-client.post('200', body: { some: 'content'})
-```
-
-This is good when you need a one-off client to make some quick API calls. 
-However, you can go further by creating custom client classes with shared configuration,
-and customizing them as needed.
-For example, you could have a base client for interacting with a specific service:
+With NxtHttpClient, you can create client classes for interacting with external services:
 
 ```ruby
 class UserServiceClient < NxtHttpClient::Client
   # Set a base URL, and any other request options you need
   configure do |config|
     config.base_url = 'www.example.com'
+    config.request_options.deep_merge!(
+      headers: { API_KEY: '1993' },
+      followlocation: true
+    )
     config.json_request = true
-    config.json_response = true
-    config.bearer_auth = ENV['USER_SERVICE_API_TOKEN']
+    config.raise_response_errors = true
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join }
   end
 
@@ -64,6 +45,8 @@ class UserServiceClient < NxtHttpClient::Client
 
   # ...as well as a response handler
   response_handler do |handler|
+    # Note: This error handler is set by default when you use 
+    # config.raise_response_errors = true
     handler.on(:error) do |response|
       Sentry.set_extras(error_details: error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
@@ -109,6 +92,25 @@ client.fetch_email
 client.fetch_user_details
 ```
 
+However, if you need a simple ad hoc client for a one-off task, you can use `.make` to instantiate one.
+
+```ruby
+client = NxtHttpClient::Client.make do 
+  configure do |config|
+    config.base_url = 'www.httpstat.us'
+    config.request_options.deep_merge!(
+      headers: { API_KEY: '1993' },
+      followlocation: true
+    )
+    config.json_request = true
+    config.json_response = true
+  end
+end
+
+client.get('/data')
+client.post('/data', body: { some: 'content'})
+```
+
 ### configure
 
 Register your default request options on the class level. Available options are:
@@ -120,7 +122,7 @@ Register your default request options on the class level. Available options are:
 - `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
   You can also do this manually by setting a response_handler.
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
-- `basic_auth=`: Pass an array containing username and password, to be sent as Basic credentials in the Authorization header
+- `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
 - `timeouts(total:, connect: nil)`: Configure timeouts
 
 ### response_handler

@@ -178,7 +178,7 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_request = true
-          config.basic_auth = 'myusername', 'mypassword'
+          config.basic_auth = { username: 'myusername', password: 'mypassword' }
           config.timeout_seconds(total: 60)
         end
       end
@@ -187,6 +187,18 @@ RSpec.describe NxtHttpClient::Client do
       expect(JSON(response.body)['headers']).to match(hash_including(
         'authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),
       ))
+    end
+
+    it 'raises an error for invalid config', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = true
+          config.basic_auth = { username: 'myusername' }
+        end
+      end
+
+      expect { client.post('post') }.to raise_error(ArgumentError, 'basic_auth must be a Hash with :username and :password')
     end
   end
 
