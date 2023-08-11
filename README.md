@@ -48,7 +48,7 @@ class UserServiceClient < NxtHttpClient::Client
     # Note: This error handler is set by default when you use 
     # config.raise_response_errors = true
     handler.on(:error) do |response|
-      Sentry.set_extras(error_details: error.to_h)
+      Sentry.set_extras(http_error_details: error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
