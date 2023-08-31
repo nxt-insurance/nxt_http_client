@@ -163,7 +163,7 @@ module NxtHttpClient
         response_handler.configure do |handler|
           handler.on(:error) do |response|
             error = NxtHttpClient::Error.new(response)
-            ::Sentry.set_extras(error_details: error.to_h) if defined?(::Sentry)
+            ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
             raise error
           end
         end

@@ -51,7 +51,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to include('Content-Type' => 'application/json',)
+      expect(request.options[:headers]).to include('Content-Type' => 'application/json')
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['json']).to eq(
         'some' => 'thing',
@@ -68,7 +68,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not include('Content-Type' => 'application/json',)
+      expect(request.options[:headers]).to_not include('Content-Type' => 'application/json')
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['form']).to eq(
         'some' => 'thing',
@@ -87,7 +87,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to include('Accept' => 'application/json',)
+      expect(request.options[:headers]).to include('Accept' => 'application/json')
       response = client.post('post')
       expect(response.body).to be_a(Hash)
     end
@@ -102,7 +102,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not include('Accept' => 'application/json',)
+      expect(request.options[:headers]).to_not include('Accept' => 'application/json')
       response = client.post('post')
       expect(response.body).to be_a(String)
     end
@@ -158,7 +158,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to include('authorization' => 'Bearer mytoken',)
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Bearer mytoken')
     end
   end
 
@@ -174,7 +174,7 @@ RSpec.describe NxtHttpClient::Client do
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to include('authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),)
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'))
     end
 
     it 'raises an error for invalid config', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
