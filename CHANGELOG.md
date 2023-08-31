@@ -1,3 +1,8 @@
+# v2.0.0 2023-08-31
+- Add simpler initialization interface for one-off clients
+- Add helpers for common config options
+- Require request timeouts
+
 # v1.1.0 2023-04-03
 - Introduce a Typhoeus::Hydra interface for batch executions
 
