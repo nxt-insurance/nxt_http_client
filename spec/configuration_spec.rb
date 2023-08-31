@@ -5,6 +5,7 @@ RSpec.describe NxtHttpClient::Client do
       configure do |config|
         config.base_url = 'httpstat.us'
         config.request_options = { method: :get }
+        config.timeout_seconds(total: 60)
       end
 
       response_handler do |handler|
@@ -29,7 +30,7 @@ RSpec.describe NxtHttpClient::Client do
 
   describe '.default_request_options' do
     it 'builds the request with the default options', :vcr_cassette do
-      expect(subject.call('200')).to eq(method: :get, cache: false, headers: {})
+      expect(subject.call('200')).to include(method: :get, cache: false, headers: {})
     end
   end
 
@@ -45,13 +46,12 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_request = true
+          config.timeout_seconds(total: 60)
         end
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to match(hash_including(
-        'Content-Type' => 'application/json',
-      ))
+      expect(request.options[:headers]).to include('Content-Type' => 'application/json')
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['json']).to eq(
         'some' => 'thing',
@@ -63,13 +63,12 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_request = false
+          config.timeout_seconds(total: 60)
         end
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not match(hash_including(
-        'Content-Type' => 'application/json',
-      ))
+      expect(request.options[:headers]).to_not include('Content-Type' => 'application/json')
       response = client.post('post', body: { some: 'thing' })
       expect(JSON(response.body)['form']).to eq(
         'some' => 'thing',
@@ -83,13 +82,12 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_response = true
+          config.timeout_seconds(total: 60)
         end
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to match(hash_including(
-        'Accept' => 'application/json',
-      ))
+      expect(request.options[:headers]).to include('Accept' => 'application/json')
       response = client.post('post')
       expect(response.body).to be_a(Hash)
     end
@@ -99,13 +97,12 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'https://postman-echo.com'
           config.json_response = false
+          config.timeout_seconds(total: 60)
         end
       end
 
       request = client.build_request('')
-      expect(request.options[:headers]).to_not match(hash_including(
-        'Accept' => 'application/json',
-      ))
+      expect(request.options[:headers]).to_not include('Accept' => 'application/json')
       response = client.post('post')
       expect(response.body).to be_a(String)
     end
@@ -118,6 +115,7 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_response = true
           config.raise_response_errors = true
+          config.timeout_seconds(total: 60)
         end
       end
 
@@ -135,6 +133,7 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_response = true
           config.raise_response_errors = false
+          config.timeout_seconds(total: 60)
         end
       end
 
@@ -154,13 +153,12 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_request = true
           config.bearer_auth = 'mytoken'
+          config.timeout_seconds(total: 60)
         end
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to match(hash_including(
-        'authorization' => 'Bearer mytoken',
-      ))
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Bearer mytoken')
     end
   end
 
@@ -171,13 +169,12 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_request = true
           config.basic_auth = { username: 'myusername', password: 'mypassword' }
+          config.timeout_seconds(total: 60)
         end
       end
 
       response = client.post('post')
-      expect(JSON(response.body)['headers']).to match(hash_including(
-        'authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),
-      ))
+      expect(JSON(response.body)['headers']).to include('authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'))
     end
 
     it 'raises an error for invalid config', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
@@ -193,7 +190,7 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.timeout' do
+  describe '.timeout_seconds' do
     around do |example|
       # Timeout doesn't work when replaying a VCR request
       WebMock.allow_net_connect!
@@ -209,10 +206,44 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect(client.build_request('').options).to match(hash_including(
+      expect(client.build_request('').options).to include(
         timeout: 0.5,
         connecttimeout: 0.2,
-      ))
+      )
+    end
+
+    it 'does not override per-request timeout' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+          config.timeout_seconds(total: 0.5, connect: 0.2)
+        end
+      end
+
+      expect(client.build_request('', timeout: 10).options).to include(
+        timeout: 10,
+        connecttimeout: 0.2,
+      )
+    end
+
+    it 'raises an error if no timeout is configured' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+        end
+      end
+
+      expect { client.post('') }.to raise_error(ArgumentError, /timeout/)
+    end
+
+    it 'does not raise an error if timeout is set on the request' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+        end
+      end
+
+      expect { client.post('', timeout: 0.5) }.to_not raise_error
     end
   end
 
@@ -222,6 +253,7 @@ RSpec.describe NxtHttpClient::Client do
         configure do |config|
           config.base_url = 'httpstat.us'
           config.request_options.deep_merge!(headers: { token: 'level one token'})
+          config.timeout_seconds(total: 60)
         end
       end
     end

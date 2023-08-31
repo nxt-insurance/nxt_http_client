@@ -23,9 +23,7 @@ module NxtHttpClient
       url = build_url(opts, url)
       opts = build_headers(opts)
 
-      if (timeouts = config.timeouts).is_a?(Hash)
-        opts.merge!(timeout: timeouts[:total], connecttimeout: timeouts[:connect])
-      end
+      set_timeouts(opts)
 
       if config.json_request
         opts[:body] = opts[:body].to_json # Typhoeus requires userland JSON encoding
@@ -126,6 +124,15 @@ module NxtHttpClient
       end
     end
 
+    def set_timeouts(opts)
+      if (timeouts = config.timeouts).is_a?(Hash)
+        opts[:timeout] ||= timeouts[:total]
+        opts[:connecttimeout] ||= timeouts[:connect]
+      end
+
+      raise ArgumentError, 'You must configure a total timeout for this client or request' unless timeout_configured?(opts)
+    end
+
     def url_without_duplicated_hashes(url)
       duplicated_slashes = url.match(/([^:]\/{2,})/)
       duplicated_slashes && duplicated_slashes.captures.each do |capture|
@@ -209,6 +216,10 @@ module NxtHttpClient
 
     def callbacks
       @callbacks ||= self.class.callbacks
+    end
+
+    def timeout_configured?(opts)
+      [:timeout, :timeout_ms].any? { opts[_1].present? }
     end
   end
 end

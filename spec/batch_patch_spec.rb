@@ -10,6 +10,7 @@ RSpec.describe NxtHttpClient::Client::BatchPatch do
 
         configure do |config|
           config.base_url = nil
+          config.timeout_seconds(total: 60)
         end
 
         response_handler(NxtHttpClient::ResponseHandler.new) do |handler|

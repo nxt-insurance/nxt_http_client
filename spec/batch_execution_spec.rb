@@ -28,6 +28,7 @@ RSpec.describe 'batch execution' do
 
         configure do |config|
           config.base_url = nil
+          config.timeout_seconds(total: 60)
         end
       end
 

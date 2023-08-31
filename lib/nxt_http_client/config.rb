@@ -22,7 +22,7 @@ module NxtHttpClient
       end
     end
 
-    def timeout_seconds(total: nil, connect: nil)
+    def timeout_seconds(total:, connect: nil)
       timeouts = { total:, connect:, }.compact
 
       self.timeouts = timeouts

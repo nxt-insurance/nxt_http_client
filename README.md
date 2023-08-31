@@ -205,6 +205,20 @@ requires the response for initialization. Furthermore it has a handy `to_h` meth
 the request and response.
 
 #### Timeouts
+**You must set a timeout on every request (or when configuring the client class).** 
+Otherwise, this gem will raise an error. The idea is to enforce the best practice 
+of [always setting a timeout](https://dev.to/bearer/the-importance-of-request-timeouts-l3n).
+
+To set a timeout, use the `timeout_seconds` config method:
+
+```rb
+configure do |config|
+  config.timeout_seconds(total: 10)
+  # You can also set a connect timeout
+  config.timeout_seconds(total: 10, connecttimeout: 2)
+end
+```
+
 NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. 
 This is useful when setting a custom timeout value in your configuration.
 
@@ -260,7 +274,25 @@ end
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To install this gem onto your local machine, run `bundle exec rake install`.
+
+## Releasing
+
+First, if you don't want to always log in with your RubyGems password, 
+you can create an API key on Rubygems.org, and then run:
+
+```shell
+bundle config set --local gem.push_key rubygems
+```
+
+Add to `~/.gem/credentials` (create if it doesn't exist):
+
+```shell
+:rubygems: <your Rubygems API key>
+```
+
+To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`,
+which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 

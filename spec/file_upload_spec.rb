@@ -3,6 +3,10 @@ RSpec.describe 'upload' do
 
   let(:client) do
     Class.new(NxtHttpClient::Client) do
+      configure do |config|
+        config.timeout_seconds(total: 60)
+      end
+
       response_handler do |handler|
         handler.on(200) { |response| response }
       end

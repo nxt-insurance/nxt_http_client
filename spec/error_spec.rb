@@ -21,6 +21,10 @@ RSpec.describe NxtHttpClient::Error do
   context 'when initialized with a real response' do
     let(:client) do
       Class.new(NxtHttpClient::Client) do
+        configure do |config|
+          config.timeout_seconds(total: 60)
+        end
+
         response_handler do |handler|
           handler.on(:error) do |response|
             NxtHttpClient::Error.new(response)
@@ -37,14 +41,14 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.body).to eq('503 Service Unavailable')
       expect(subject.url).to eq('httpstat.us/503')
       expect(subject.request).to be_a(Typhoeus::Request)
-      expect(subject.request_options).to eq('headers'=>{}, 'cache'=>false)
+      expect(subject.request_options).to include('headers'=>{}, 'cache'=>false)
       expect(subject.request_headers).to eq({})
-      expect(subject.response_options).to match(hash_including(
+      expect(subject.response_options).to include(
         'code' => 503,
         'status_message' => 'Service Unavailable',
         'body' => '503 Service Unavailable'
-      ))
-      expect(subject.response_headers).to match(hash_including('Content-Type' => 'text/plain; charset=utf-8'))
+      )
+      expect(subject.response_headers).to include('Content-Type' => 'text/plain; charset=utf-8')
       expect(subject.response_content_type).to eq('text/plain; charset=utf-8')
 
       expect(subject.to_h.keys).to match_array(
@@ -66,6 +70,10 @@ RSpec.describe NxtHttpClient::Error do
     context 'when the response contains invalid json' do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
+          configure do
+            config.timeout_seconds(total: 60)
+          end
+
           response_handler do |handler|
             handler.on(:success) do |response|
               response.define_singleton_method :body do
@@ -86,6 +94,10 @@ RSpec.describe NxtHttpClient::Error do
     context 'when the response is valid json' do
       let(:client) do
         Class.new(NxtHttpClient::Client) do
+          configure do
+            config.timeout_seconds(total: 60)
+          end
+
           response_handler do |handler|
             handler.on(:success) do |response|
               NxtHttpClient::Error.new(response)
