@@ -1,0 +1,52 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: https://postman-echo.com/post
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      User-Agent:
+      - Typhoeus - https://github.com/typhoeus/typhoeus
+      Expect:
+      - ''
+  response:
+    status:
+      code: 200
+      message: ''
+    headers:
+      Date:
+      - Tue, 20 Jun 2023 16:59:12 GMT
+      Content-Type:
+      - application/json; charset=utf-8
+      Content-Length:
+      - '474'
+      Etag:
+      - W/"1da-PeD3Lx6KQ+OBtoeuyFC+mRiP3c0"
+      Set-Cookie:
+      - sails.sid=s%3A-1ROu0S2oRdkhC3Hny5YEi_a_GxTebdI.RMmyyyJqizkOuYxydpUl9R7c4WBIO%2FiI2vR2J95VinY;
+        Path=/; HttpOnly
+    body:
+      encoding: ASCII-8BIT
+      string: |-
+        {
+          "args": {},
+          "data": "",
+          "files": {},
+          "form": {},
+          "headers": {
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "host": "postman-echo.com",
+            "x-amzn-trace-id": "Root=1-6491dae0-4049e91d36c730e347c6746b",
+            "content-length": "0",
+            "accept": "*/*",
+            "user-agent": "Typhoeus - https://github.com/typhoeus/typhoeus",
+            "content-type": "application/x-www-form-urlencoded"
+          },
+          "json": null,
+          "url": "https://postman-echo.com/post"
+        }
+  recorded_at: Tue, 20 Jun 2023 16:59:11 GMT
+recorded_with: VCR 6.1.0

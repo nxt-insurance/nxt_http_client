@@ -33,6 +33,8 @@ class UserServiceClient < NxtHttpClient::Client
       headers: { API_KEY: '1993' },
       followlocation: true
     )
+    config.json_request = true
+    config.raise_response_errors = true
     config.x_request_id_proc = -> { ('a'..'z').to_a.shuffle.take(10).join }
   end
 
@@ -43,8 +45,10 @@ class UserServiceClient < NxtHttpClient::Client
 
   # ...as well as a response handler
   response_handler do |handler|
+    # Note: This error handler is set by default when you use 
+    # config.raise_response_errors = true
     handler.on(:error) do |response|
-      Sentry.set_extras(error_details: error.to_h)
+      Sentry.set_extras(http_error_details: error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
@@ -98,16 +102,28 @@ client = NxtHttpClient::Client.make do
       headers: { API_KEY: '1993' },
       followlocation: true
     )
+    config.json_request = true
+    config.json_response = true
   end
 end
 
-client.get('200')
+client.get('/data')
+client.post('/data', body: { some: 'content'})
 ```
 
 ### configure
 
-Register your default request options on the class level. Available options are `request_options` that are passed
-directly to the underlying Typhoeus Request. Then there is `base_url` and `x_request_id_proc`.
+Register your default request options on the class level. Available options are:
+- `request_options`, passed directly to the underlying Typhoeus Request
+- `base_url=`
+- `x_request_id_proc=`
+- `json_request=`: Shorthand to set the Content-Type request header to JSON and automatically convert request bodies to JSON
+- `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON
+- `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
+  You can also do this manually by setting a response_handler.
+- `bearer_auth=`: Set a bearer token to be sent in the Authorization header
+- `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
+- `timeouts(total:, connect: nil)`: Configure timeouts
 
 ### response_handler
 

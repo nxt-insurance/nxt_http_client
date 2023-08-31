@@ -39,6 +39,183 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
+  describe '.json_request' do
+    it 'sends the request as JSON when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = true
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to match(hash_including(
+        'Content-Type' => 'application/json',
+      ))
+      response = client.post('post', body: { some: 'thing' })
+      expect(JSON(response.body)['json']).to eq(
+        'some' => 'thing',
+      )
+    end
+
+    it 'does not send the request as JSON when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = false
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to_not match(hash_including(
+        'Content-Type' => 'application/json',
+      ))
+      response = client.post('post', body: { some: 'thing' })
+      expect(JSON(response.body)['form']).to eq(
+        'some' => 'thing',
+      )
+    end
+  end
+
+  describe '.json_response' do
+    it 'parses the response body as JSON when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = true
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to match(hash_including(
+        'Accept' => 'application/json',
+      ))
+      response = client.post('post')
+      expect(response.body).to be_a(Hash)
+    end
+
+    it 'does not parse the response body as JSON when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = false
+        end
+      end
+
+      request = client.build_request('')
+      expect(request.options[:headers]).to_not match(hash_including(
+        'Accept' => 'application/json',
+      ))
+      response = client.post('post')
+      expect(response.body).to be_a(String)
+    end
+  end
+
+  describe '.raise_response_errors' do
+    it 'raises an error for non-success responses when true', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = true
+          config.raise_response_errors = true
+        end
+      end
+
+      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error, /NxtHttpClient::Error::400/) do |error|
+        expect(error.response.body).to be_a(String)
+        expect(JSON(error.response.body)).to eq({
+          'status' => 400
+        })
+      end
+    end
+
+    it 'does not raise an error for non-success responses when false', vcr_cassette: { match_requests_on: [:uri, :method, :headers, :body_as_json] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_response = true
+          config.raise_response_errors = false
+        end
+      end
+
+      response = client.get('/status/400')
+      expect(response.body).to be_a(String)
+
+      expect(JSON(response.body)).to eq({
+        'status' => 400
+      })
+    end
+  end
+
+  describe '.bearer_auth' do
+    it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = true
+          config.bearer_auth = 'mytoken'
+        end
+      end
+
+      response = client.post('post')
+      expect(JSON(response.body)['headers']).to match(hash_including(
+        'authorization' => 'Bearer mytoken',
+      ))
+    end
+  end
+
+  describe '.basic_auth' do
+    it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = true
+          config.basic_auth = { username: 'myusername', password: 'mypassword' }
+        end
+      end
+
+      response = client.post('post')
+      expect(JSON(response.body)['headers']).to match(hash_including(
+        'authorization' => 'Basic ' + Base64.strict_encode64('myusername:mypassword'),
+      ))
+    end
+
+    it 'raises an error for invalid config', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'https://postman-echo.com'
+          config.json_request = true
+          config.basic_auth = { username: 'myusername' }
+        end
+      end
+
+      expect { client.post('post') }.to raise_error(ArgumentError, 'basic_auth must be a Hash with :username and :password')
+    end
+  end
+
+  describe '.timeout' do
+    around do |example|
+      # Timeout doesn't work when replaying a VCR request
+      WebMock.allow_net_connect!
+      VCR.turned_off { example.run }
+      WebMock.disable_net_connect!
+    end
+
+    it 'sets the timeout correctly' do
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'httpstat.us?sleep=1000'
+          config.timeout_seconds(total: 0.5, connect: 0.2)
+        end
+      end
+
+      expect(client.build_request('').options).to match(hash_including(
+        timeout: 0.5,
+        connecttimeout: 0.2,
+      ))
+    end
+  end
+
   context 'inheritance' do
     let(:level_one) do
       Class.new(described_class) do
