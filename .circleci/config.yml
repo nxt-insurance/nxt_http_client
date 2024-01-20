@@ -6,7 +6,7 @@ orbs:
 jobs:
   build:
     docker:
-      - image: cimg/ruby:3.2.2-node
+      - image: cimg/ruby:3.2.3-node
       - image: cimg/redis:6.0.16
 
     working_directory: ~/repo
