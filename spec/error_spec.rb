@@ -13,8 +13,29 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.response_options).to eq({})
       expect(subject.response_headers).to eq({})
       expect(subject.response_content_type).to be_nil
-      expect(subject.timed_out?).to be(false)
-      expect(subject.status_message).to be(nil)
+      expect(subject.timed_out?).to be_falsey
+      expect(subject.status_message).to be_nil
+      expect(subject.response_code).to be_zero
+    end
+  end
+
+  context 'when the response is a empty string' do
+    subject do
+      described_class.new('')
+    end
+
+    it 'responds to all methods' do
+      expect(subject.body).to be_nil
+      expect(subject.url).to eq("/dev/null")
+      expect(subject.request).to be_a(Typhoeus::Request)
+      expect(subject.request_options).to eq({})
+      expect(subject.request_headers).to eq({})
+      expect(subject.response_options).to eq({})
+      expect(subject.response_headers).to eq({})
+      expect(subject.response_content_type).to be_nil
+      expect(subject.timed_out?).to be_falsey
+      expect(subject.status_message).to be_nil
+      expect(subject.response_code).to be_zero
     end
   end
 
