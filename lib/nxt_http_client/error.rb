@@ -41,7 +41,9 @@ module NxtHttpClient
     end
 
     def response_code
-      response.code || 0
+      return response.code if response.respond_to?(:code)
+      
+      0
     end
 
     def request

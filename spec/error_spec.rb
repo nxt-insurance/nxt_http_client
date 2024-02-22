@@ -13,8 +13,9 @@ RSpec.describe NxtHttpClient::Error do
       expect(subject.response_options).to eq({})
       expect(subject.response_headers).to eq({})
       expect(subject.response_content_type).to be_nil
-      expect(subject.timed_out?).to be(false)
-      expect(subject.status_message).to be(nil)
+      expect(subject.timed_out?).to be_falsey
+      expect(subject.status_message).to be_nil
+      expect(subject.response_code).to be_zero
     end
   end
 
