@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-GEM_VERSION=$(ruby -e '$LOAD_PATH << File.join(File.dirname(__FILE__), "lib"); require "nxt_http_client/version"; print NxtClients::VERSION')
+GEM_VERSION=$(ruby -e '$LOAD_PATH << File.join(File.dirname(__FILE__), "lib"); require "nxt_http_client/version"; print NxtHttpClient::VERSION')
 
 gem build nxt_http_client.gemspec
 
