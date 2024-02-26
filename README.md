@@ -278,7 +278,30 @@ To install this gem onto your local machine, run `bundle exec rake install`.
 
 ## Releasing
 
-### Github Package Registry
+### RubyGems 
+
+First, if you don't want to always log in with your RubyGems password, 
+you can create an API key on Rubygems.org, and then run:
+
+```shell
+bundle config set --local gem.push_key rubygems
+```
+
+Add to `~/.gem/credentials` (create if it doesn't exist):
+
+```shell
+:rubygems: <your Rubygems API key>
+```
+
+To release a new version follow the steps strictly: 
+
+- Commit all your feature changes
+- Update the version number in `version.rb`,
+- Run bundle install to update the Gemfile.lock
+- Open your PR and get it approved and merged
+- And then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+
+### Github Package Registry 
 
 To release a new version follow the steps strictly: 
 
@@ -302,29 +325,6 @@ Then run
 ```sh
 bundle config set --local gem.push_key github
 ```
-
-### RubyGems 
-
-First, if you don't want to always log in with your RubyGems password, 
-you can create an API key on Rubygems.org, and then run:
-
-```shell
-bundle config set --local gem.push_key rubygems
-```
-
-Add to `~/.gem/credentials` (create if it doesn't exist):
-
-```shell
-:rubygems: <your Rubygems API key>
-```
-
-To release a new version follow the steps strictly: 
-
-- Commit all your feature changes
-- Update the version number in `version.rb`,
-- Run bundle install to update the Gemfile.lock
-- Open your PR and get it approved and merged
-- And then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 
