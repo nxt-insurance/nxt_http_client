@@ -1,3 +1,6 @@
+# v2.0.1 2024-02-22
+- Handle response code for empty strings and blank responses
+
 # v2.0.0 2023-08-31
 - Add simpler initialization interface for one-off clients
 - Add helpers for common config options

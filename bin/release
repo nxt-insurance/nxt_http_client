@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+
+GEM_VERSION=$(ruby -e '$LOAD_PATH << File.join(File.dirname(__FILE__), "lib"); require "nxt_http_client/version"; print NxtHttpClient::VERSION')
+
+gem build nxt_http_client.gemspec
+
+if [ ! -d "pkg" ]; then
+  mkdir pkg
+fi
+
+mv nxt_http_client-$GEM_VERSION.gem pkg/nxt_http_client-$GEM_VERSION.gem
+
+git tag -m "Release $GEM_VERSION" -a v$GEM_VERSION HEAD
+git push origin --tags
+
+gem push --key github --host https://rubygems.pkg.github.com/nxt-insurance pkg/nxt_http_client-$GEM_VERSION.gem
