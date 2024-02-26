@@ -278,6 +278,8 @@ To install this gem onto your local machine, run `bundle exec rake install`.
 
 ## Releasing
 
+### Github Package Registry
+
 To release a new version, update the version number in `version.rb`, and then run `bin/release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to the github package registry.
 
 Before releasing a new version, make sure you have authenticated with the Github package registry. To do so, create a personal access token ([in your Github account settings](https://github.com/settings/tokens))
@@ -294,6 +296,24 @@ Then run
 ```sh
 bundle config set --local gem.push_key github
 ```
+
+### RubyGems 
+
+First, if you don't want to always log in with your RubyGems password, 
+you can create an API key on Rubygems.org, and then run:
+
+```shell
+bundle config set --local gem.push_key rubygems
+```
+
+Add to `~/.gem/credentials` (create if it doesn't exist):
+
+```shell
+:rubygems: <your Rubygems API key>
+```
+
+To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`,
+which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 
