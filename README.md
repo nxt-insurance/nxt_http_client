@@ -280,7 +280,13 @@ To install this gem onto your local machine, run `bundle exec rake install`.
 
 ### Github Package Registry
 
-To release a new version, update the version number in `version.rb`, and then run `bin/release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to the github package registry.
+To release a new version follow the steps strictly: 
+
+- Commit all your feature changes
+- Update the version number in `version.rb`,
+- Run bundle install to update the Gemfile.lock
+- Open your PR and get it approved and merged
+- Checkout to main and then run `bin/release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to the github package registry.
 
 Before releasing a new version, make sure you have authenticated with the Github package registry. To do so, create a personal access token ([in your Github account settings](https://github.com/settings/tokens))
 
@@ -312,8 +318,13 @@ Add to `~/.gem/credentials` (create if it doesn't exist):
 :rubygems: <your Rubygems API key>
 ```
 
-To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`,
-which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+To release a new version follow the steps strictly: 
+
+- Commit all your feature changes
+- Update the version number in `version.rb`,
+- Run bundle install to update the Gemfile.lock
+- Open your PR and get it approved and merged
+- And then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
 ## Contributing
 
