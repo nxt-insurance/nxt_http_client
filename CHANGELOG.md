@@ -1,3 +1,6 @@
+# v2.1.0 2024-06-05
+- Bump dependencies
+
 # v2.0.1 2024-02-22
 - Handle response code for empty strings and blank responses
 
