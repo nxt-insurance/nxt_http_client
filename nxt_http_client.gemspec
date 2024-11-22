@@ -23,7 +23,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'typhoeus'
-  spec.add_dependency 'activesupport', '< 8.0'
+  spec.add_dependency 'activesupport'
   spec.add_dependency 'nxt_registry'
 
   spec.add_development_dependency 'bundler'
