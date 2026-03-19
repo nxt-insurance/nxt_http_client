@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'base64'
 require 'vcr'
 require 'nxt_vcr_harness'
 require 'nxt_http_client'
