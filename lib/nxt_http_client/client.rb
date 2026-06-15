@@ -144,7 +144,23 @@ module NxtHttpClient
 
     def callback_or_response(response, response_handler)
       callback = response_handler.callback_for_response(response)
-      callback && instance_exec(response, &callback) || response
+      return instance_exec(response, &callback) || response if callback
+
+      return raise_network_error(response) if raise_network_error?(response)
+
+      response
+    end
+
+    # Only fires when no consumer callback matched the response — consumer on(0)/on(:error)/on(:timed_out)
+    # always take precedence, so this never clobbers their handling.
+    def raise_network_error?(response)
+      config.raise_network_errors && response.code.to_i.zero?
+    end
+
+    def raise_network_error(response)
+      error = NxtHttpClient::Error.from_response(response)
+      ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
+      raise error
     end
 
     def build_response_handler(handler, &block)
@@ -161,11 +177,7 @@ module NxtHttpClient
 
       if config.raise_response_errors
         response_handler.configure do |handler|
-          handler.on(:error) do |response|
-            error = NxtHttpClient::Error.new(response)
-            ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
-            raise error
-          end
+          handler.on(:error) { |response| raise_network_error(response) }
         end
       end
 

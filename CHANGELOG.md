@@ -1,3 +1,13 @@
+# v2.2.0 2026-06-15
+- Add `NxtHttpClient::TransientError` marker module and `return_code`-mapped network error subclasses
+  under `NxtHttpClient::Error`: `NetworkError`, `Timeout`, `ConnectionFailed`, `NameResolutionError`,
+  `TlsError` (all transient/retryable) and `CertificateError` (cert verification — not transient).
+- Consumers can `retry_on NxtHttpClient::TransientError` without per-client `on(0)` wiring.
+- **Behavior change**: a code-0 (network failure) response now raises the mapped error by default.
+  Opt out with `config.raise_network_errors = false` to restore returning the code-0 response.
+  Backwards compatible for anyone rescuing `NxtHttpClient::Error` (all subclasses inherit from it);
+  exact-class checks and error-message strings change.
+
 # v2.1.0 2024-06-05
 - Bump dependencies
 

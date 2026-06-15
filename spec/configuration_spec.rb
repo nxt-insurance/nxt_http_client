@@ -146,6 +146,39 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
+  describe '.raise_network_errors' do
+    # WebMock renders a timeout as a Typhoeus code-0 / :operation_timedout response — the same shape
+    # libcurl produces on a real network failure.
+    before { stub_request(:get, 'http://network-failure.test/').to_timeout }
+
+    def build_client(raise_network_errors:)
+      NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://network-failure.test'
+          config.raise_network_errors = raise_network_errors
+          config.timeout_seconds(total: 60)
+        end
+      end
+    end
+
+    it 'raises the return_code-mapped transient error by default' do
+      expect { build_client(raise_network_errors: true).get('') }
+        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::TransientError) }
+    end
+
+    it 'returns the code-0 response when opted out' do
+      response = build_client(raise_network_errors: false).get('')
+      expect(response.code).to be_zero
+    end
+
+    it 'does not clobber a consumer callback for code 0' do
+      client = build_client(raise_network_errors: true)
+      result = client.get('') { |handler| handler.on(0) { :handled } }
+
+      expect(result).to eq(:handled)
+    end
+  end
+
   describe '.bearer_auth' do
     it 'sets the correct Authorization header', vcr_cassette: { match_requests_on: [:uri, :method, :headers] } do
       client = NxtHttpClient::Client.make do
@@ -240,6 +273,7 @@ RSpec.describe NxtHttpClient::Client do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'httpstat.us?sleep=1000'
+          config.raise_network_errors = false # otherwise the timeout below raises Error::Timeout
         end
       end
 

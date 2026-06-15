@@ -132,4 +132,49 @@ RSpec.describe NxtHttpClient::Error do
       end
     end
   end
+
+  describe '.from_response' do
+    def response_for(return_code)
+      Typhoeus::Response.new(code: 0, return_code: return_code, mock: true)
+    end
+
+    {
+      operation_timedout: NxtHttpClient::Error::Timeout,
+      couldnt_connect: NxtHttpClient::Error::ConnectionFailed,
+      couldnt_resolve_host: NxtHttpClient::Error::NameResolutionError,
+      couldnt_resolve_proxy: NxtHttpClient::Error::NameResolutionError,
+      ssl_connect_error: NxtHttpClient::Error::TlsError,
+      ssl_cipher: NxtHttpClient::Error::TlsError,
+      peer_failed_verification: NxtHttpClient::Error::CertificateError,
+      ssl_cacert_badfile: NxtHttpClient::Error::CertificateError,
+      some_other_curl_failure: NxtHttpClient::Error::NetworkError,
+    }.each do |return_code, expected_class|
+      it "maps return_code #{return_code} to #{expected_class}" do
+        expect(NxtHttpClient::Error.from_response(response_for(return_code))).to be_an_instance_of(expected_class)
+      end
+    end
+
+    it 'returns the base Error for a real (non code-0) HTTP response' do
+      response = Typhoeus::Response.new(code: 503, return_code: :ok, mock: true)
+      expect(NxtHttpClient::Error.from_response(response)).to be_an_instance_of(NxtHttpClient::Error)
+    end
+  end
+
+  describe 'TransientError marker' do
+    transient = [
+      NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::Timeout, NxtHttpClient::Error::ConnectionFailed,
+      NxtHttpClient::Error::NameResolutionError, NxtHttpClient::Error::TlsError
+    ]
+
+    transient.each do |klass|
+      it "tags #{klass} as transient and keeps it rescuable as NxtHttpClient::Error" do
+        expect(klass.ancestors).to include(NxtHttpClient::TransientError)
+        expect(klass.new(nil)).to be_a(NxtHttpClient::Error)
+      end
+    end
+
+    it 'does not tag CertificateError (cert verification is permanent)' do
+      expect(NxtHttpClient::Error::CertificateError.ancestors).not_to include(NxtHttpClient::TransientError)
+    end
+  end
 end
