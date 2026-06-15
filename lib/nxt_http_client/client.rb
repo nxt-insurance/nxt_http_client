@@ -146,18 +146,22 @@ module NxtHttpClient
       callback = response_handler.callback_for_response(response)
       return instance_exec(response, &callback) || response if callback
 
-      return raise_network_error(response) if raise_network_error?(response)
+      return raise_mapped_error(response) if raise_mapped_error?(response)
 
       response
     end
 
-    # Reached only when no consumer callback matched, so a consumer on(0)/on(:error) keeps precedence.
-    def raise_network_error?(response)
-      config.raise_network_errors && response.code.to_i.zero?
+    # Reached only when no consumer callback matched, so a consumer on(<code>)/on(:error) keeps precedence.
+    def raise_mapped_error?(response)
+      code = response.code.to_i
+      return config.raise_network_errors if code.zero?
+      return config.raise_status_errors if (400..599).cover?(code)
+
+      false
     end
 
-    def raise_network_error(response)
-      error = NxtHttpClient::Error.from_response(response)
+    def raise_mapped_error(response)
+      error = self.class.error_class_for(response).new(response)
       ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
       raise error
     end
@@ -176,7 +180,7 @@ module NxtHttpClient
 
       if config.raise_response_errors
         response_handler.configure do |handler|
-          handler.on(:error) { |response| raise_network_error(response) }
+          handler.on(:error) { |response| raise_mapped_error(response) }
         end
       end
 

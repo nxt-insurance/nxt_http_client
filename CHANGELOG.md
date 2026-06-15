@@ -1,12 +1,20 @@
 # v2.2.0 2026-06-15
-- Add `NxtHttpClient::TransientError` marker module and `return_code`-mapped network error subclasses
-  under `NxtHttpClient::Error`: `NetworkError`, `Timeout`, `ConnectionFailed`, `NameResolutionError`,
-  `TlsError` (all transient/retryable) and `CertificateError` (cert verification — not transient).
-- Consumers can `retry_on NxtHttpClient::TransientError` without per-client `on(0)` wiring.
-- **Behavior change**: a code-0 (network failure) response now raises the mapped error by default.
-  Opt out with `config.raise_network_errors = false` to restore returning the code-0 response.
-  Backwards compatible for anyone rescuing `NxtHttpClient::Error` (all subclasses inherit from it);
-  exact-class checks and error-message strings change.
+- Add a default error taxonomy under `NxtHttpClient::Error`, raised by default for unhandled non-success
+  responses so consumers no longer hand-roll per-status `on(...)` handlers:
+  - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
+    `NotFound` (404), `UnprocessableEntity` (422), `TooManyRequests` (429); `ServerError` (5xx).
+  - Network (`return_code`-mapped code-0): `NetworkError` with `Timeout`, `ConnectionFailed`,
+    `NameResolutionError`, `TlsError`; `CertificateError` (cert verification — a sibling, not a child).
+- Retryable errors share base classes — `retry_on NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ServerError`.
+  4xx, `CertificateError` and 429 are excluded (429 retry policy is left to consumers).
+- `map_error(status, klass)` DSL to override the mapping per client (e.g. a domain `ValidationFailed` that
+  parses the body); inherited by subclasses.
+- New config flags `raise_status_errors` and `raise_network_errors` (both default `true`); a consumer's own
+  `on(<code>)`/`on(:error)`/`on(:timed_out)` callback always takes precedence.
+- **Behavior change**: 4xx/5xx and code-0 responses now raise by default. Opt out with
+  `config.raise_status_errors = false` / `config.raise_network_errors = false`. Backwards compatible for
+  anyone rescuing `NxtHttpClient::Error` (all subclasses inherit from it); exact-class checks and
+  error-message strings change (Sentry fingerprints will regroup).
 
 # v2.1.0 2024-06-05
 - Bump dependencies

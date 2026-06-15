@@ -119,7 +119,7 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error, /NxtHttpClient::Error::400/) do |error|
+      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error::BadRequest) do |error|
         expect(error.response.body).to be_a(String)
         expect(JSON(error.response.body)).to eq({
           'status' => 400
@@ -133,6 +133,7 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_response = true
           config.raise_response_errors = false
+          config.raise_status_errors = false # default-on; opt out so the 400 is returned, not raised
           config.timeout_seconds(total: 60)
         end
       end
@@ -160,9 +161,9 @@ RSpec.describe NxtHttpClient::Client do
       end
     end
 
-    it 'raises the return_code-mapped transient error by default' do
+    it 'raises the return_code-mapped network error by default' do
       expect { build_client(raise_network_errors: true).get('') }
-        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::TransientError) }
+        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::Error::NetworkError) }
     end
 
     it 'returns the code-0 response when opted out' do
@@ -175,6 +176,53 @@ RSpec.describe NxtHttpClient::Client do
       result = client.get('') { |handler| handler.on(0) { :handled } }
 
       expect(result).to eq(:handled)
+    end
+  end
+
+  describe '.raise_status_errors' do
+    before { stub_request(:get, 'http://status.test/').to_return(status: response_status) }
+
+    let(:response_status) { 422 }
+
+    def build_client(raise_status_errors: true, &block)
+      NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://status.test'
+          config.raise_status_errors = raise_status_errors
+          config.timeout_seconds(total: 60)
+        end
+
+        instance_exec(&block) if block
+      end
+    end
+
+    it 'raises the status-mapped error by default' do
+      expect { build_client.get('') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
+    end
+
+    context 'with a 5xx response' do
+      let(:response_status) { 503 }
+
+      it 'raises a ServerError' do
+        expect { build_client.get('') }.to raise_error(NxtHttpClient::Error::ServerError)
+      end
+    end
+
+    it 'returns the response when opted out' do
+      response = build_client(raise_status_errors: false).get('')
+      expect(response.code).to eq(422)
+    end
+
+    it 'does not clobber a consumer callback for the status' do
+      result = build_client.get('') { |handler| handler.on(422) { :handled } }
+      expect(result).to eq(:handled)
+    end
+
+    it 'raises a consumer-overridden error class via map_error' do
+      domain_error = Class.new(NxtHttpClient::Error)
+      client = build_client { map_error 422, domain_error }
+
+      expect { client.get('') }.to raise_error(domain_error)
     end
   end
 

@@ -121,9 +121,12 @@ Register your default request options on the class level. Available options are:
 - `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON
 - `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
   You can also do this manually by setting a response_handler.
+- `raise_status_errors=`: Defaults to `true`. Raises a status-mapped `NxtHttpClient::Error` subclass
+  (`ClientError`/`ServerError`) on an unhandled 4xx/5xx response. Set to `false` to instead return the response.
+  See [Error taxonomy](#error-taxonomy).
 - `raise_network_errors=`: Defaults to `true`. Raises a `return_code`-mapped `NxtHttpClient::Error::NetworkError`
   subclass on an unhandled code-0 (network failure) response. Set to `false` to instead return the code-0 response.
-  See [Network errors](#network-errors).
+  See [Error taxonomy](#error-taxonomy).
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
 - `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
 - `timeouts(total:, connect: nil)`: Configure timeouts
@@ -225,36 +228,72 @@ end
 NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. 
 This is useful when setting a custom timeout value in your configuration.
 
-### Network errors
+### Error taxonomy
 
-Typhoeus/libcurl surfaces network failures and timeouts as a response with HTTP **code 0** (no response received);
-the real cause lives in libcurl's `return_code`. By default (`config.raise_network_errors = true`) the client maps a
-code-0 response to a typed subclass of `NxtHttpClient::Error` and raises it — so you no longer need a per-client
-`on(0)` handler:
+The client raises a typed subclass of `NxtHttpClient::Error` for every unhandled non-success response, so you no
+longer need to hand-roll per-status `on(400)`/`on(422)`/`on(5xx)`/`on(0)` handlers just to get a usable taxonomy.
+All classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
 
-| libcurl `return_code`                          | class                                    | transient? |
-|------------------------------------------------|------------------------------------------|------------|
-| `:operation_timedout`                          | `NxtHttpClient::Error::Timeout`          | yes        |
-| `:couldnt_connect`                             | `NxtHttpClient::Error::ConnectionFailed` | yes        |
-| `:couldnt_resolve_host` / `:couldnt_resolve_proxy` | `NxtHttpClient::Error::NameResolutionError` | yes    |
-| `:ssl_connect_error` and other non-cert `:ssl_*` | `NxtHttpClient::Error::TlsError`       | yes        |
-| any other code-0                               | `NxtHttpClient::Error::NetworkError`     | yes        |
-| cert verification (`:peer_failed_verification`, `:ssl_cacert_badfile`, …) | `NxtHttpClient::Error::CertificateError` | no |
+**HTTP status** (`config.raise_status_errors = true`, default on):
 
-All transient subclasses include the `NxtHttpClient::TransientError` marker module, so a consumer can retry every
-retryable network failure in one place without inspecting `return_code`:
+| status        | class                                       | retryable? |
+|---------------|---------------------------------------------|------------|
+| 400           | `NxtHttpClient::Error::BadRequest`          | no         |
+| 401           | `NxtHttpClient::Error::Unauthorized`        | no         |
+| 403           | `NxtHttpClient::Error::Forbidden`           | no         |
+| 404           | `NxtHttpClient::Error::NotFound`            | no         |
+| 422           | `NxtHttpClient::Error::UnprocessableEntity` | no         |
+| 429           | `NxtHttpClient::Error::TooManyRequests`     | up to you  |
+| other 4xx     | `NxtHttpClient::Error::ClientError`         | no         |
+| 5xx           | `NxtHttpClient::Error::ServerError`         | yes        |
+
+**Network / code 0** (`config.raise_network_errors = true`, default on). Typhoeus/libcurl surfaces network failures and
+timeouts as a response with HTTP **code 0** (no response received); the real cause lives in libcurl's `return_code`:
+
+| libcurl `return_code`                              | class                                       | retryable? |
+|----------------------------------------------------|---------------------------------------------|------------|
+| `:operation_timedout`                              | `NxtHttpClient::Error::Timeout`             | yes        |
+| `:couldnt_connect`                                 | `NxtHttpClient::Error::ConnectionFailed`    | yes        |
+| `:couldnt_resolve_host` / `:couldnt_resolve_proxy` | `NxtHttpClient::Error::NameResolutionError` | yes        |
+| `:ssl_connect_error` and other non-cert `:ssl_*`   | `NxtHttpClient::Error::TlsError`            | yes        |
+| any other code-0                                   | `NxtHttpClient::Error::NetworkError`        | yes        |
+| cert verification (`:peer_failed_verification`, …)  | `NxtHttpClient::Error::CertificateError`    | no         |
+
+#### Retrying
+
+The retryable errors share two base classes, so a job retries them in one place:
 
 ```ruby
-retry_on NxtHttpClient::TransientError
+retry_on NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ServerError
 ```
 
-`CertificateError` deliberately does **not** include the marker — a failed certificate/CA verification is permanent,
-retrying never helps. All of these inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error`
-handlers keep working.
+`ClientError` (4xx) is not retried — those are caller mistakes. `CertificateError` is a **sibling** of `NetworkError`
+(not a child), so it is excluded from `retry_on NetworkError` — a failed cert/CA verification is permanent.
+`TooManyRequests` (429) is left out of the retryable set; add your own `retry_on NxtHttpClient::Error::TooManyRequests`
+(ideally honoring `Retry-After`) if you want it.
 
-A consumer's own `on(0)` / `on(:error)` / `on(:timed_out)` callback always takes precedence; the default raise only
-fires when nothing else handled the code-0 response. Set `config.raise_network_errors = false` to opt out and receive
-the code-0 response instead. **5xx responses are left to consumers** — the gem does not tag a `ServerError`.
+#### Precedence and opting out
+
+A consumer's own `on(<code>)` / `on(:error)` / `on(:timed_out)` callback always takes precedence; the default raise
+only fires when nothing else handled the response. Set `config.raise_status_errors = false` and/or
+`config.raise_network_errors = false` to opt out and receive the response instead.
+
+#### Domain-typed errors
+
+Map a status to your own error class with `map_error` to get a domain error that parses the response body. It is
+inherited by subclasses and overrides the default for that status:
+
+```ruby
+class MyService::Client < NxtHttpClient::Client
+  map_error 422, MyService::Error::ValidationFailed
+end
+
+class MyService::Error::ValidationFailed < NxtHttpClient::Error
+  def default_message
+    body.dig('errors', 0, 'detail') # `body` parses JSON response bodies for you
+  end
+end
+```
 
 ### Logging
 

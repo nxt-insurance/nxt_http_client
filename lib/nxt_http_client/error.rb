@@ -1,23 +1,33 @@
 module NxtHttpClient
-  # Marker for failures safe to retry. Consumers `retry_on NxtHttpClient::TransientError`, and can tag
-  # their own errors (e.g. a 5xx) with it — retryability independent of the class hierarchy.
-  module TransientError; end
-
   class Error < StandardError
-    # Kept separate from the generic TLS errors so cert/trust failures can stay non-transient.
+    # Cert/trust failures — mapped to non-retryable CertificateError, kept out of the generic TlsError.
     CERTIFICATE_RETURN_CODES = %i[
       peer_failed_verification ssl_certproblem ssl_cacert_badfile ssl_issuer_error ssl_crl_badfile
     ].freeze
 
-    # Non-zero (real HTTP) responses stay the base Error; only code-0 maps to a network subclass.
     def self.from_response(response, message = nil)
       error_class_for(response).new(response, message)
     end
 
     def self.error_class_for(response)
-      return self unless response_code_zero?(response)
+      code = response.respond_to?(:code) ? response.code.to_i : 0
+      return network_error_class(response.respond_to?(:return_code) ? response.return_code : nil) if code.zero?
 
-      network_error_class(response.respond_to?(:return_code) ? response.return_code : nil)
+      status_error_class(code)
+    end
+
+    def self.status_error_class(code)
+      case code
+      when 400 then BadRequest
+      when 401 then Unauthorized
+      when 403 then Forbidden
+      when 404 then NotFound
+      when 422 then UnprocessableEntity
+      when 429 then TooManyRequests
+      when 400..499 then ClientError
+      when 500..599 then ServerError
+      else self # 3xx etc. → base Error
+      end
     end
 
     def self.network_error_class(return_code)
@@ -29,10 +39,6 @@ module NxtHttpClient
       else
         return_code.to_s.include?('ssl') ? TlsError : NetworkError
       end
-    end
-
-    def self.response_code_zero?(response)
-      (response.respond_to?(:code) ? response.code : 0).to_i.zero?
     end
 
     def initialize(response, message = nil)
@@ -113,17 +119,23 @@ module NxtHttpClient
       response_headers['Content-Type']
     end
 
-    # Base for all code-0 (no HTTP response received) failures; transient by default.
-    class NetworkError < self
-      include TransientError
-    end
+    class ClientError < self; end
+    class BadRequest < ClientError; end           # 400
+    class Unauthorized < ClientError; end          # 401
+    class Forbidden < ClientError; end             # 403
+    class NotFound < ClientError; end              # 404
+    class UnprocessableEntity < ClientError; end   # 422
+    class TooManyRequests < ClientError; end       # 429
 
+    class ServerError < self; end
+
+    class NetworkError < self; end                # code 0 (no HTTP response)
     class Timeout < NetworkError; end             # :operation_timedout
     class ConnectionFailed < NetworkError; end    # :couldnt_connect
     class NameResolutionError < NetworkError; end # :couldnt_resolve_host / :couldnt_resolve_proxy
     class TlsError < NetworkError; end            # :ssl_connect_error and other non-cert :ssl_*
 
-    # NOT a NetworkError so it stays out of the transient marker — cert verification is permanent.
-    class CertificateError < Error; end
+    # Sibling of NetworkError, not a child, so it's excluded from `retry_on NetworkError`.
+    class CertificateError < self; end
   end
 end

@@ -134,8 +134,12 @@ RSpec.describe NxtHttpClient::Error do
   end
 
   describe '.from_response' do
-    def response_for(return_code)
+    def network_response(return_code)
       Typhoeus::Response.new(code: 0, return_code: return_code, mock: true)
+    end
+
+    def status_response(code)
+      Typhoeus::Response.new(code: code, return_code: :ok, mock: true)
     end
 
     {
@@ -150,31 +154,50 @@ RSpec.describe NxtHttpClient::Error do
       some_other_curl_failure: NxtHttpClient::Error::NetworkError,
     }.each do |return_code, expected_class|
       it "maps return_code #{return_code} to #{expected_class}" do
-        expect(NxtHttpClient::Error.from_response(response_for(return_code))).to be_an_instance_of(expected_class)
+        expect(NxtHttpClient::Error.from_response(network_response(return_code))).to be_an_instance_of(expected_class)
       end
     end
 
-    it 'returns the base Error for a real (non code-0) HTTP response' do
-      response = Typhoeus::Response.new(code: 503, return_code: :ok, mock: true)
-      expect(NxtHttpClient::Error.from_response(response)).to be_an_instance_of(NxtHttpClient::Error)
+    {
+      400 => NxtHttpClient::Error::BadRequest,
+      401 => NxtHttpClient::Error::Unauthorized,
+      403 => NxtHttpClient::Error::Forbidden,
+      404 => NxtHttpClient::Error::NotFound,
+      409 => NxtHttpClient::Error::ClientError,    # unmapped 4xx falls back to ClientError
+      422 => NxtHttpClient::Error::UnprocessableEntity,
+      429 => NxtHttpClient::Error::TooManyRequests,
+      500 => NxtHttpClient::Error::ServerError,
+      503 => NxtHttpClient::Error::ServerError,
+    }.each do |code, expected_class|
+      it "maps status #{code} to #{expected_class}" do
+        expect(NxtHttpClient::Error.from_response(status_response(code))).to be_an_instance_of(expected_class)
+      end
+    end
+
+    it 'returns the base Error for an unmapped (3xx) response' do
+      expect(NxtHttpClient::Error.from_response(status_response(304))).to be_an_instance_of(NxtHttpClient::Error)
     end
   end
 
-  describe 'TransientError marker' do
-    transient = [
-      NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::Timeout, NxtHttpClient::Error::ConnectionFailed,
-      NxtHttpClient::Error::NameResolutionError, NxtHttpClient::Error::TlsError
-    ]
-
-    transient.each do |klass|
-      it "tags #{klass} as transient and keeps it rescuable as NxtHttpClient::Error" do
-        expect(klass.ancestors).to include(NxtHttpClient::TransientError)
-        expect(klass.new(nil)).to be_a(NxtHttpClient::Error)
+  describe 'retry hierarchy' do
+    it 'groups the retryable errors under NetworkError / ServerError' do
+      [NxtHttpClient::Error::Timeout, NxtHttpClient::Error::ConnectionFailed,
+       NxtHttpClient::Error::NameResolutionError, NxtHttpClient::Error::TlsError].each do |klass|
+        expect(klass.new(nil)).to be_a(NxtHttpClient::Error::NetworkError)
       end
     end
 
-    it 'does not tag CertificateError (cert verification is permanent)' do
-      expect(NxtHttpClient::Error::CertificateError.ancestors).not_to include(NxtHttpClient::TransientError)
+    it 'excludes CertificateError and 4xx from the retryable bases' do
+      expect(NxtHttpClient::Error::CertificateError.new(nil)).not_to be_a(NxtHttpClient::Error::NetworkError)
+      expect(NxtHttpClient::Error::TooManyRequests.new(nil)).not_to be_a(NxtHttpClient::Error::ServerError)
+      expect(NxtHttpClient::Error::UnprocessableEntity.new(nil)).to be_a(NxtHttpClient::Error::ClientError)
+    end
+
+    it 'keeps every subclass rescuable as the base NxtHttpClient::Error' do
+      [NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ClientError,
+       NxtHttpClient::Error::ServerError, NxtHttpClient::Error::CertificateError].each do |klass|
+        expect(klass.new(nil)).to be_a(NxtHttpClient::Error)
+      end
     end
   end
 end

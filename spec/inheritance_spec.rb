@@ -154,6 +154,7 @@ RSpec.describe NxtHttpClient::Client do
         config.base_url = nil
         config.request_options.deep_merge(headers: { Token: 'deep merge' })
         config.x_request_id_proc = -> { 'my id' }
+        config.raise_status_errors = false # the headers test inspects a 503 response without handling it
       end
 
       response_handler(NxtHttpClient::ResponseHandler.new) do |handler|

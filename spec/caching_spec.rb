@@ -50,6 +50,7 @@ RSpec.describe NxtHttpClient::Client do
 
         configure do |config|
           config.x_request_id_proc = -> { Thread.current.object_id }
+          config.raise_status_errors = false # example.com returns 405 to POST; this test isn't about errors
           config.timeout_seconds(total: 90)
         end
       end

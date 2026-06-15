@@ -52,6 +52,19 @@ module NxtHttpClient
       @response_handler
     end
 
+    # Override the default error class for a status, e.g. `map_error 422, MyService::ValidationFailed`.
+    def map_error(status, error_class)
+      error_map[Integer(status)] = error_class
+    end
+
+    def error_map
+      @error_map ||= dup_option_from_ancestor(:@error_map) { {} }
+    end
+
+    def error_class_for(response)
+      error_map[response.code.to_i] || NxtHttpClient::Error.error_class_for(response)
+    end
+
     private
 
     def client_ancestors

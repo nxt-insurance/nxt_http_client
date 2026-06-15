@@ -9,9 +9,9 @@ module NxtHttpClient
     # Helper to set the Accept request header and automatically convert success response bodies to JSON
     json_response: false,
     raise_response_errors: false,
-    # Raise a return_code-mapped NxtHttpClient::Error::NetworkError on an unhandled code-0 (network failure)
-    # response. Opt-out (default true): set false to restore the old behavior of returning the code-0 response.
+    # Raise the mapped error on an unhandled code-0 / 4xx-5xx response (default true; set false to return it).
     raise_network_errors: true,
+    raise_status_errors: true,
 
     bearer_auth: nil,
     basic_auth: nil,
