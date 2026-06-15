@@ -151,8 +151,7 @@ module NxtHttpClient
       response
     end
 
-    # Only fires when no consumer callback matched the response — consumer on(0)/on(:error)/on(:timed_out)
-    # always take precedence, so this never clobbers their handling.
+    # Reached only when no consumer callback matched, so a consumer on(0)/on(:error) keeps precedence.
     def raise_network_error?(response)
       config.raise_network_errors && response.code.to_i.zero?
     end

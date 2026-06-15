@@ -147,8 +147,7 @@ RSpec.describe NxtHttpClient::Client do
   end
 
   describe '.raise_network_errors' do
-    # WebMock renders a timeout as a Typhoeus code-0 / :operation_timedout response — the same shape
-    # libcurl produces on a real network failure.
+    # to_timeout yields a Typhoeus code-0 / :operation_timedout response — the libcurl network-failure shape.
     before { stub_request(:get, 'http://network-failure.test/').to_timeout }
 
     def build_client(raise_network_errors:)
