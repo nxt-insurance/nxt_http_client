@@ -9,9 +9,9 @@ module NxtHttpClient
     # Helper to set the Accept request header and automatically convert success response bodies to JSON
     json_response: false,
     raise_response_errors: false,
-    # Raise the mapped error on an unhandled code-0 / 4xx-5xx response (default true; set false to return it).
-    raise_network_errors: true,
-    raise_status_errors: true,
+    # Opt in (default false) to raise the mapped NxtHttpClient::Error taxonomy on an unhandled
+    # 4xx/5xx/code-0 response instead of returning it. See README "Error taxonomy".
+    use_error_taxonomy: false,
 
     bearer_auth: nil,
     basic_auth: nil,

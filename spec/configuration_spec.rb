@@ -119,7 +119,7 @@ RSpec.describe NxtHttpClient::Client do
         end
       end
 
-      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error::BadRequest) do |error|
+      expect { client.get('/status/400') }.to raise_error(NxtHttpClient::Error, /NxtHttpClient::Error::400/) do |error|
         expect(error.response.body).to be_a(String)
         expect(JSON(error.response.body)).to eq({
           'status' => 400
@@ -133,7 +133,6 @@ RSpec.describe NxtHttpClient::Client do
           config.base_url = 'https://postman-echo.com'
           config.json_response = true
           config.raise_response_errors = false
-          config.raise_status_errors = false # default-on; opt out so the 400 is returned, not raised
           config.timeout_seconds(total: 60)
         end
       end
@@ -147,48 +146,19 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.raise_network_errors' do
-    # to_timeout yields a Typhoeus code-0 / :operation_timedout response — the libcurl network-failure shape.
-    before { stub_request(:get, 'http://network-failure.test/').to_timeout }
-
-    def build_client(raise_network_errors:)
-      NxtHttpClient::Client.make do
-        configure do |config|
-          config.base_url = 'http://network-failure.test'
-          config.raise_network_errors = raise_network_errors
-          config.timeout_seconds(total: 60)
-        end
-      end
+  describe '.use_error_taxonomy' do
+    before do
+      stub_request(:get, 'http://taxonomy.test/timeout').to_timeout
+      stub_request(:get, 'http://taxonomy.test/status').to_return(status: response_status)
     end
-
-    it 'raises the return_code-mapped network error by default' do
-      expect { build_client(raise_network_errors: true).get('') }
-        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::Error::NetworkError) }
-    end
-
-    it 'returns the code-0 response when opted out' do
-      response = build_client(raise_network_errors: false).get('')
-      expect(response.code).to be_zero
-    end
-
-    it 'does not clobber a consumer callback for code 0' do
-      client = build_client(raise_network_errors: true)
-      result = client.get('') { |handler| handler.on(0) { :handled } }
-
-      expect(result).to eq(:handled)
-    end
-  end
-
-  describe '.raise_status_errors' do
-    before { stub_request(:get, 'http://status.test/').to_return(status: response_status) }
 
     let(:response_status) { 422 }
 
-    def build_client(raise_status_errors: true, &block)
+    def build_client(use_error_taxonomy: true, &block)
       NxtHttpClient::Client.make do
         configure do |config|
-          config.base_url = 'http://status.test'
-          config.raise_status_errors = raise_status_errors
+          config.base_url = 'http://taxonomy.test'
+          config.use_error_taxonomy = use_error_taxonomy
           config.timeout_seconds(total: 60)
         end
 
@@ -196,25 +166,37 @@ RSpec.describe NxtHttpClient::Client do
       end
     end
 
-    it 'raises the status-mapped error by default' do
-      expect { build_client.get('') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
+    it 'is off by default (returns the response)' do
+      client = NxtHttpClient::Client.make do
+        configure { |config| config.base_url = 'http://taxonomy.test'; config.timeout_seconds(total: 60) }
+      end
+
+      expect(client.get('status').code).to eq(422)
+    end
+
+    it 'raises the status-mapped error when enabled' do
+      expect { build_client.get('status') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
     end
 
     context 'with a 5xx response' do
       let(:response_status) { 503 }
 
       it 'raises a ServerError' do
-        expect { build_client.get('') }.to raise_error(NxtHttpClient::Error::ServerError)
+        expect { build_client.get('status') }.to raise_error(NxtHttpClient::Error::ServerError)
       end
     end
 
-    it 'returns the response when opted out' do
-      response = build_client(raise_status_errors: false).get('')
-      expect(response.code).to eq(422)
+    it 'raises the return_code-mapped network error on a code-0 response' do
+      expect { build_client.get('timeout') }
+        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::Error::NetworkError) }
     end
 
-    it 'does not clobber a consumer callback for the status' do
-      result = build_client.get('') { |handler| handler.on(422) { :handled } }
+    it 'returns the response when opted out' do
+      expect(build_client(use_error_taxonomy: false).get('status').code).to eq(422)
+    end
+
+    it 'does not clobber a consumer callback' do
+      result = build_client.get('status') { |handler| handler.on(422) { :handled } }
       expect(result).to eq(:handled)
     end
 
@@ -222,7 +204,7 @@ RSpec.describe NxtHttpClient::Client do
       domain_error = Class.new(NxtHttpClient::Error)
       client = build_client { map_error 422, domain_error }
 
-      expect { client.get('') }.to raise_error(domain_error)
+      expect { client.get('status') }.to raise_error(domain_error)
     end
   end
 
@@ -320,7 +302,6 @@ RSpec.describe NxtHttpClient::Client do
       client = NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'httpstat.us?sleep=1000'
-          config.raise_network_errors = false # otherwise the timeout below raises Error::Timeout
         end
       end
 

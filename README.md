@@ -121,12 +121,9 @@ Register your default request options on the class level. Available options are:
 - `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON
 - `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
   You can also do this manually by setting a response_handler.
-- `raise_status_errors=`: Defaults to `true`. Raises a status-mapped `NxtHttpClient::Error` subclass
-  (`ClientError`/`ServerError`) on an unhandled 4xx/5xx response. Set to `false` to instead return the response.
-  See [Error taxonomy](#error-taxonomy).
-- `raise_network_errors=`: Defaults to `true`. Raises a `return_code`-mapped `NxtHttpClient::Error::NetworkError`
-  subclass on an unhandled code-0 (network failure) response. Set to `false` to instead return the code-0 response.
-  See [Error taxonomy](#error-taxonomy).
+- `use_error_taxonomy=`: Defaults to `false`. Opt in to raise the mapped `NxtHttpClient::Error` taxonomy
+  (`ClientError`/`ServerError`/`NetworkError` subclasses) on an unhandled 4xx/5xx/code-0 response instead of
+  returning it. See [Error taxonomy](#error-taxonomy).
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
 - `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
 - `timeouts(total:, connect: nil)`: Configure timeouts
@@ -230,11 +227,12 @@ This is useful when setting a custom timeout value in your configuration.
 
 ### Error taxonomy
 
-The client raises a typed subclass of `NxtHttpClient::Error` for every unhandled non-success response, so you no
-longer need to hand-roll per-status `on(400)`/`on(422)`/`on(5xx)`/`on(0)` handlers just to get a usable taxonomy.
-All classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
+Set `config.use_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for every
+unhandled non-success response, so you no longer need to hand-roll per-status `on(400)`/`on(422)`/`on(5xx)`/`on(0)`
+handlers just to get a usable taxonomy. It is **off by default** (the client returns the response as before); all
+classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
 
-**HTTP status** (`config.raise_status_errors = true`, default on):
+**HTTP status:**
 
 | status        | class                                       | retryable? |
 |---------------|---------------------------------------------|------------|
@@ -247,8 +245,8 @@ All classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClie
 | other 4xx     | `NxtHttpClient::Error::ClientError`         | no         |
 | 5xx           | `NxtHttpClient::Error::ServerError`         | yes        |
 
-**Network / code 0** (`config.raise_network_errors = true`, default on). Typhoeus/libcurl surfaces network failures and
-timeouts as a response with HTTP **code 0** (no response received); the real cause lives in libcurl's `return_code`:
+**Network / code 0.** Typhoeus/libcurl surfaces network failures and timeouts as a response with HTTP **code 0**
+(no response received); the real cause lives in libcurl's `return_code`:
 
 | libcurl `return_code`                              | class                                       | retryable? |
 |----------------------------------------------------|---------------------------------------------|------------|
@@ -274,9 +272,9 @@ retry_on NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ServerError
 
 #### Precedence and opting out
 
-A consumer's own `on(<code>)` / `on(:error)` / `on(:timed_out)` callback always takes precedence; the default raise
-only fires when nothing else handled the response. Set `config.raise_status_errors = false` and/or
-`config.raise_network_errors = false` to opt out and receive the response instead.
+A consumer's own `on(<code>)` / `on(:error)` / `on(:timed_out)` callback always takes precedence; the raise only
+fires when nothing else handled the response. So you can enable the taxonomy for retries yet still handle, say, a
+404 inline with your own `on(404)`.
 
 #### Domain-typed errors
 

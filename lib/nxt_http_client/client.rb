@@ -153,11 +153,10 @@ module NxtHttpClient
 
     # Reached only when no consumer callback matched, so a consumer on(<code>)/on(:error) keeps precedence.
     def raise_mapped_error?(response)
-      code = response.code.to_i
-      return config.raise_network_errors if code.zero?
-      return config.raise_status_errors if (400..599).cover?(code)
+      return false unless config.use_error_taxonomy
 
-      false
+      code = response.code.to_i
+      code.zero? || (400..599).cover?(code)
     end
 
     def raise_mapped_error(response)
@@ -180,7 +179,11 @@ module NxtHttpClient
 
       if config.raise_response_errors
         response_handler.configure do |handler|
-          handler.on(:error) { |response| raise_mapped_error(response) }
+          handler.on(:error) do |response|
+            error = NxtHttpClient::Error.new(response)
+            ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
+            raise error
+          end
         end
       end
 

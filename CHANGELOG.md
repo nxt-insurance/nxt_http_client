@@ -1,6 +1,6 @@
 # v2.2.0 2026-06-15
-- Add a default error taxonomy under `NxtHttpClient::Error`, raised by default for unhandled non-success
-  responses so consumers no longer hand-roll per-status `on(...)` handlers:
+- Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.use_error_taxonomy = true` the client
+  raises a typed subclass for an unhandled non-success response instead of returning it:
   - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
     `NotFound` (404), `UnprocessableEntity` (422), `TooManyRequests` (429); `ServerError` (5xx).
   - Network (`return_code`-mapped code-0): `NetworkError` with `Timeout`, `ConnectionFailed`,
@@ -9,12 +9,9 @@
   4xx, `CertificateError` and 429 are excluded (429 retry policy is left to consumers).
 - `map_error(status, klass)` DSL to override the mapping per client (e.g. a domain `ValidationFailed` that
   parses the body); inherited by subclasses.
-- New config flags `raise_status_errors` and `raise_network_errors` (both default `true`); a consumer's own
-  `on(<code>)`/`on(:error)`/`on(:timed_out)` callback always takes precedence.
-- **Behavior change**: 4xx/5xx and code-0 responses now raise by default. Opt out with
-  `config.raise_status_errors = false` / `config.raise_network_errors = false`. Backwards compatible for
-  anyone rescuing `NxtHttpClient::Error` (all subclasses inherit from it); exact-class checks and
-  error-message strings change (Sentry fingerprints will regroup).
+- `config.use_error_taxonomy` defaults to `false`, so the upgrade is backwards compatible — existing behavior
+  (and `raise_response_errors`) is unchanged until you opt in. A consumer's own `on(<code>)`/`on(:error)`/
+  `on(:timed_out)` callback always takes precedence over the taxonomy.
 
 # v2.1.0 2024-06-05
 - Bump dependencies
