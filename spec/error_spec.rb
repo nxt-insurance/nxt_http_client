@@ -132,4 +132,110 @@ RSpec.describe NxtHttpClient::Error do
       end
     end
   end
+
+  describe '#to_h credential redaction' do
+    before { stub_request(:get, 'http://creds.test/').to_return(status: 401) }
+
+    def to_h_for(&setup)
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://creds.test'
+          config.raise_error_taxonomy = true
+          config.timeout_seconds(total: 60)
+          setup.call(config)
+        end
+      end
+
+      client.get('')
+    rescue NxtHttpClient::Error => error
+      error.to_h
+    end
+
+    it 'redacts the bearer Authorization header' do
+      hash = to_h_for { |config| config.bearer_auth = 'super-secret-token' }
+
+      expect(hash[:request_headers]['Authorization']).to eq('[REDACTED]')
+      expect(hash[:request_options]['headers']['Authorization']).to eq('[REDACTED]')
+    end
+
+    it 'redacts the basic-auth userpwd' do
+      hash = to_h_for { |config| config.basic_auth = { username: 'user', password: 'pass' } }
+
+      expect(hash[:request_options]['userpwd']).to eq('[REDACTED]')
+    end
+
+    it 'redacts a non-canonically-cased authorization header' do
+      hash = to_h_for { |config| config.request_options = { headers: { 'authorization' => 'Bearer secret' } } }
+
+      expect(hash[:request_headers]['authorization']).to eq('[REDACTED]')
+    end
+  end
+
+  describe '.from_response' do
+    def network_response(return_code)
+      Typhoeus::Response.new(code: 0, return_code: return_code, mock: true)
+    end
+
+    def status_response(code)
+      Typhoeus::Response.new(code: code, return_code: :ok, mock: true)
+    end
+
+    {
+      operation_timedout: NxtHttpClient::Error::Timeout,
+      couldnt_connect: NxtHttpClient::Error::ConnectionFailed,
+      couldnt_resolve_host: NxtHttpClient::Error::NameResolutionError,
+      couldnt_resolve_proxy: NxtHttpClient::Error::NameResolutionError,
+      ssl_connect_error: NxtHttpClient::Error::TlsError,
+      ssl_cipher: NxtHttpClient::Error::TlsError,
+      peer_failed_verification: NxtHttpClient::Error::CertificateError,
+      ssl_cacert_badfile: NxtHttpClient::Error::CertificateError,
+      some_other_curl_failure: NxtHttpClient::Error::NetworkError,
+    }.each do |return_code, expected_class|
+      it "maps return_code #{return_code} to #{expected_class}" do
+        expect(NxtHttpClient::Error.from_response(network_response(return_code))).to be_an_instance_of(expected_class)
+      end
+    end
+
+    {
+      400 => NxtHttpClient::Error::BadRequest,
+      401 => NxtHttpClient::Error::Unauthorized,
+      403 => NxtHttpClient::Error::Forbidden,
+      404 => NxtHttpClient::Error::NotFound,
+      409 => NxtHttpClient::Error::ClientError,    # unmapped 4xx falls back to ClientError
+      422 => NxtHttpClient::Error::UnprocessableEntity,
+      429 => NxtHttpClient::Error::TooManyRequests,
+      500 => NxtHttpClient::Error::ServerError,
+      503 => NxtHttpClient::Error::ServerError,
+    }.each do |code, expected_class|
+      it "maps status #{code} to #{expected_class}" do
+        expect(NxtHttpClient::Error.from_response(status_response(code))).to be_an_instance_of(expected_class)
+      end
+    end
+
+    it 'returns the base Error for an unmapped (3xx) response' do
+      expect(NxtHttpClient::Error.from_response(status_response(304))).to be_an_instance_of(NxtHttpClient::Error)
+    end
+  end
+
+  describe 'retry hierarchy' do
+    it 'groups the retryable errors under NetworkError / ServerError' do
+      [NxtHttpClient::Error::Timeout, NxtHttpClient::Error::ConnectionFailed,
+       NxtHttpClient::Error::NameResolutionError, NxtHttpClient::Error::TlsError].each do |klass|
+        expect(klass.new(nil)).to be_a(NxtHttpClient::Error::NetworkError)
+      end
+    end
+
+    it 'excludes CertificateError and 4xx from the retryable bases' do
+      expect(NxtHttpClient::Error::CertificateError.new(nil)).not_to be_a(NxtHttpClient::Error::NetworkError)
+      expect(NxtHttpClient::Error::TooManyRequests.new(nil)).not_to be_a(NxtHttpClient::Error::ServerError)
+      expect(NxtHttpClient::Error::UnprocessableEntity.new(nil)).to be_a(NxtHttpClient::Error::ClientError)
+    end
+
+    it 'keeps every subclass rescuable as the base NxtHttpClient::Error' do
+      [NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ClientError,
+       NxtHttpClient::Error::ServerError, NxtHttpClient::Error::CertificateError].each do |klass|
+        expect(klass.new(nil)).to be_a(NxtHttpClient::Error)
+      end
+    end
+  end
 end

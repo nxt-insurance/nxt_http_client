@@ -1,3 +1,23 @@
+# v2.2.0 2026-06-15
+- Report HTTP error details to Sentry via the structured `set_context('http_error', …)` instead of the
+  deprecated `set_extras(http_error_details: …)`. (Typhoeus is not auto-instrumented by Sentry, so the gem
+  attaches this itself.)
+- `Error#to_h` now redacts the `Authorization` header and basic-auth `userpwd` (it is sent to Sentry).
+- `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
+- Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.raise_error_taxonomy = true` the client
+  raises a typed subclass for an unhandled 4xx/5xx/code-0 response instead of returning it:
+  - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
+    `NotFound` (404), `UnprocessableEntity` (422), `TooManyRequests` (429); `ServerError` (5xx).
+  - Network (`return_code`-mapped code-0): `NetworkError` with `Timeout`, `ConnectionFailed`,
+    `NameResolutionError`, `TlsError`; `CertificateError` (cert verification — a sibling, not a child).
+- Retryable errors share base classes — `retry_on NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ServerError`.
+  4xx, `CertificateError` and 429 are excluded (429 retry policy is left to consumers).
+- `map_error(status, klass)` DSL to override the mapping per client (e.g. a domain `ValidationFailed` that
+  parses the body); inherited by subclasses.
+- `config.raise_error_taxonomy` defaults to `false`, so the upgrade is backwards compatible — existing behavior
+  (and `raise_response_errors`) is unchanged until you opt in. A consumer's own `on(<code>)`/`on(:error)`/
+  `on(:timed_out)` callback always takes precedence over the taxonomy.
+
 # v2.1.0 2024-06-05
 - Bump dependencies
 

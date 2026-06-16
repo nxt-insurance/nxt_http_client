@@ -144,7 +144,25 @@ module NxtHttpClient
 
     def callback_or_response(response, response_handler)
       callback = response_handler.callback_for_response(response)
-      callback && instance_exec(response, &callback) || response
+      return instance_exec(response, &callback) || response if callback
+
+      return raise_mapped_error(response) if raise_mapped_error?(response)
+
+      response
+    end
+
+    # Reached only when no consumer callback matched, so a consumer on(<code>)/on(:error) keeps precedence.
+    def raise_mapped_error?(response)
+      return false unless config.raise_error_taxonomy
+
+      code = response.code.to_i
+      code.zero? || (400..599).cover?(code)
+    end
+
+    def raise_mapped_error(response)
+      error = self.class.error_class_for(response).new(response)
+      ::Sentry.set_context('http_error', error.to_h) if defined?(::Sentry)
+      raise error
     end
 
     def build_response_handler(handler, &block)
@@ -153,17 +171,20 @@ module NxtHttpClient
       if config.json_response
         response_handler.configure do |handler|
           handler.on(:success) do |response|
-            response.define_singleton_method(:body) { JSON(response.response_body) }
+            # nil for a blank/204 body — parsing "" would raise JSON::ParserError
+            response.define_singleton_method(:body) { response.response_body.presence && JSON(response.response_body) }
             response
           end
         end
       end
 
-      if config.raise_response_errors
+      # Legacy generic-error raising. Superseded by raise_error_taxonomy (typed), which takes precedence here
+      # via the callback_or_response fallback — so don't also register this shadowing on(:error) handler.
+      if config.raise_response_errors && !config.raise_error_taxonomy
         response_handler.configure do |handler|
           handler.on(:error) do |response|
             error = NxtHttpClient::Error.new(response)
-            ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
+            ::Sentry.set_context('http_error', error.to_h) if defined?(::Sentry)
             raise error
           end
         end

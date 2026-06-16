@@ -48,7 +48,7 @@ class UserServiceClient < NxtHttpClient::Client
     # Note: This error handler is set by default when you use 
     # config.raise_response_errors = true
     handler.on(:error) do |response|
-      Sentry.set_extras(http_error_details: error.to_h)
+      Sentry.set_context('http_error', error.to_h)
       raise StandardError, "I can't handle this: #{response.code}"
     end
   end
@@ -118,12 +118,16 @@ Register your default request options on the class level. Available options are:
 - `base_url=`
 - `x_request_id_proc=`
 - `json_request=`: Shorthand to set the Content-Type request header to JSON and automatically convert request bodies to JSON
-- `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON
-- `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
-  You can also do this manually by setting a response_handler.
+- `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON (an empty/204 body becomes `nil`)
+- `raise_response_errors=`: Makes the client raise a generic `NxtHttpClient::Error` for a non-success response.
+  Superseded by `raise_error_taxonomy` (which raises typed errors and takes precedence when both are set); kept for
+  backward compatibility.
+- `raise_error_taxonomy=`: Defaults to `false`. Opt in to raise the mapped `NxtHttpClient::Error` taxonomy
+  (`ClientError`/`ServerError`/`NetworkError` subclasses) on an unhandled 4xx/5xx/code-0 response instead of
+  returning it. See [Error taxonomy](#error-taxonomy).
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
 - `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
-- `timeouts(total:, connect: nil)`: Configure timeouts
+- `timeout_seconds(total:, connect: nil)`: Configure timeouts
 
 ### response_handler
 
@@ -215,12 +219,83 @@ To set a timeout, use the `timeout_seconds` config method:
 configure do |config|
   config.timeout_seconds(total: 10)
   # You can also set a connect timeout
-  config.timeout_seconds(total: 10, connecttimeout: 2)
+  config.timeout_seconds(total: 10, connect: 2)
 end
 ```
 
 NxtHttpClient::Error exposes the `timed_out?` method from `Typhoeus::Response`, so you can check if an error is raised due to a timeout. 
 This is useful when setting a custom timeout value in your configuration.
+
+### Error taxonomy
+
+Set `config.raise_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for an
+unhandled 4xx, 5xx, or code-0 (network) response, so you no longer need to hand-roll per-status
+`on(400)`/`on(422)`/`on(5xx)`/`on(0)` handlers just to get a usable taxonomy. (3xx and other codes are returned
+as before.) It is **off by default** (the client returns the response); all classes inherit from
+`NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
+
+**HTTP status:**
+
+| status        | class                                       | retryable? |
+|---------------|---------------------------------------------|------------|
+| 400           | `NxtHttpClient::Error::BadRequest`          | no         |
+| 401           | `NxtHttpClient::Error::Unauthorized`        | no         |
+| 403           | `NxtHttpClient::Error::Forbidden`           | no         |
+| 404           | `NxtHttpClient::Error::NotFound`            | no         |
+| 422           | `NxtHttpClient::Error::UnprocessableEntity` | no         |
+| 429           | `NxtHttpClient::Error::TooManyRequests`     | up to you  |
+| other 4xx     | `NxtHttpClient::Error::ClientError`         | no         |
+| 5xx           | `NxtHttpClient::Error::ServerError`         | yes        |
+
+**Network / code 0.** Typhoeus/libcurl surfaces network failures and timeouts as a response with HTTP **code 0**
+(no response received); the real cause lives in libcurl's `return_code`:
+
+| libcurl `return_code`                              | class                                       | retryable? |
+|----------------------------------------------------|---------------------------------------------|------------|
+| `:operation_timedout`                              | `NxtHttpClient::Error::Timeout`             | yes        |
+| `:couldnt_connect`                                 | `NxtHttpClient::Error::ConnectionFailed`    | yes        |
+| `:couldnt_resolve_host` / `:couldnt_resolve_proxy` | `NxtHttpClient::Error::NameResolutionError` | yes        |
+| `:ssl_connect_error` and other non-cert `:ssl_*`   | `NxtHttpClient::Error::TlsError`            | yes        |
+| any other code-0                                   | `NxtHttpClient::Error::NetworkError`        | yes        |
+| cert verification (`:peer_failed_verification`, …)  | `NxtHttpClient::Error::CertificateError`    | no         |
+
+#### Retrying
+
+The retryable errors share two base classes, so a job retries them in one place:
+
+```ruby
+retry_on NxtHttpClient::Error::NetworkError, NxtHttpClient::Error::ServerError
+```
+
+`ClientError` (4xx) is not retried — those are caller mistakes. `CertificateError` is a **sibling** of `NetworkError`
+(not a child), so it is excluded from `retry_on NetworkError` — a failed cert/CA verification is permanent.
+`TooManyRequests` (429) is left out of the retryable set; add your own `retry_on NxtHttpClient::Error::TooManyRequests`
+(ideally honoring `Retry-After`) if you want it.
+
+#### Precedence and opting out
+
+A consumer's own `on(<code>)` / `on(:error)` / `on(:timed_out)` callback always takes precedence; the raise only
+fires when nothing else handled the response. So you can enable the taxonomy for retries yet still handle, say, a
+404 inline with your own `on(404)`.
+
+#### Domain-typed errors
+
+Map a status to your own error class with `map_error` to get a domain error that parses the response body. It is
+inherited by subclasses and overrides the default for that status. `map_error` only takes effect when
+`raise_error_taxonomy` is enabled — it customizes the taxonomy, it does not enable raising on its own:
+
+```ruby
+class MyService::Client < NxtHttpClient::Client
+  configure { |config| config.raise_error_taxonomy = true }
+  map_error 422, MyService::Error::ValidationFailed
+end
+
+class MyService::Error::ValidationFailed < NxtHttpClient::Error
+  def default_message
+    body.dig('errors', 0, 'detail') # `body` parses JSON response bodies for you
+  end
+end
+```
 
 ### Logging
 

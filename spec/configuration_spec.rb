@@ -106,6 +106,19 @@ RSpec.describe NxtHttpClient::Client do
       response = client.post('post')
       expect(response.body).to be_a(String)
     end
+
+    it 'returns nil for an empty/204 body instead of raising JSON::ParserError' do
+      stub_request(:get, 'http://json.test/').to_return(status: 204, body: '')
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://json.test'
+          config.json_response = true
+          config.timeout_seconds(total: 60)
+        end
+      end
+
+      expect(client.get('').body).to be_nil
+    end
   end
 
   describe '.raise_response_errors' do
@@ -143,6 +156,79 @@ RSpec.describe NxtHttpClient::Client do
       expect(JSON(response.body)).to eq({
         'status' => 400
       })
+    end
+  end
+
+  describe '.raise_error_taxonomy' do
+    before do
+      stub_request(:get, 'http://taxonomy.test/timeout').to_timeout
+      stub_request(:get, 'http://taxonomy.test/status').to_return(status: response_status)
+    end
+
+    let(:response_status) { 422 }
+
+    def build_client(raise_error_taxonomy: true, &block)
+      NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://taxonomy.test'
+          config.raise_error_taxonomy = raise_error_taxonomy
+          config.timeout_seconds(total: 60)
+        end
+
+        instance_exec(&block) if block
+      end
+    end
+
+    it 'is off by default (returns the response)' do
+      client = NxtHttpClient::Client.make do
+        configure { |config| config.base_url = 'http://taxonomy.test'; config.timeout_seconds(total: 60) }
+      end
+
+      expect(client.get('status').code).to eq(422)
+    end
+
+    it 'raises the status-mapped error when enabled' do
+      expect { build_client.get('status') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
+    end
+
+    context 'with a 5xx response' do
+      let(:response_status) { 503 }
+
+      it 'raises a ServerError' do
+        expect { build_client.get('status') }.to raise_error(NxtHttpClient::Error::ServerError)
+      end
+    end
+
+    it 'raises the return_code-mapped network error on a code-0 response' do
+      expect { build_client.get('timeout') }
+        .to raise_error(NxtHttpClient::Error::Timeout) { |e| expect(e).to be_a(NxtHttpClient::Error::NetworkError) }
+    end
+
+    it 'returns the response when opted out' do
+      expect(build_client(raise_error_taxonomy: false).get('status').code).to eq(422)
+    end
+
+    it 'does not clobber a consumer callback' do
+      result = build_client.get('status') { |handler| handler.on(422) { :handled } }
+      expect(result).to eq(:handled)
+    end
+
+    it 'raises a consumer-overridden error class via map_error' do
+      domain_error = Class.new(NxtHttpClient::Error)
+      client = build_client { map_error 422, domain_error }
+
+      expect { client.get('status') }.to raise_error(domain_error)
+    end
+
+    it 'rejects a map_error class that is not a NxtHttpClient::Error' do
+      expect { Class.new(NxtHttpClient::Client) { map_error 422, String } }
+        .to raise_error(ArgumentError, /must be a subclass of NxtHttpClient::Error/)
+    end
+
+    it 'takes precedence over the legacy raise_response_errors (typed, not generic)' do
+      client = build_client { config.raise_response_errors = true }
+
+      expect { client.get('status') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
     end
   end
 
