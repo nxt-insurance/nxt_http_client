@@ -219,7 +219,7 @@ To set a timeout, use the `timeout_seconds` config method:
 configure do |config|
   config.timeout_seconds(total: 10)
   # You can also set a connect timeout
-  config.timeout_seconds(total: 10, connecttimeout: 2)
+  config.timeout_seconds(total: 10, connect: 2)
 end
 ```
 
