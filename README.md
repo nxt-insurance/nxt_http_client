@@ -280,10 +280,12 @@ fires when nothing else handled the response. So you can enable the taxonomy for
 #### Domain-typed errors
 
 Map a status to your own error class with `map_error` to get a domain error that parses the response body. It is
-inherited by subclasses and overrides the default for that status:
+inherited by subclasses and overrides the default for that status. `map_error` only takes effect when
+`use_error_taxonomy` is enabled — it customizes the taxonomy, it does not enable raising on its own:
 
 ```ruby
 class MyService::Client < NxtHttpClient::Client
+  configure { |config| config.use_error_taxonomy = true }
   map_error 422, MyService::Error::ValidationFailed
 end
 
