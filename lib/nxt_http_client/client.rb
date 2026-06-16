@@ -171,7 +171,8 @@ module NxtHttpClient
       if config.json_response
         response_handler.configure do |handler|
           handler.on(:success) do |response|
-            response.define_singleton_method(:body) { JSON(response.response_body) }
+            # nil for a blank/204 body — parsing "" would raise JSON::ParserError
+            response.define_singleton_method(:body) { response.response_body.presence && JSON(response.response_body) }
             response
           end
         end

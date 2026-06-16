@@ -106,6 +106,19 @@ RSpec.describe NxtHttpClient::Client do
       response = client.post('post')
       expect(response.body).to be_a(String)
     end
+
+    it 'returns nil for an empty/204 body instead of raising JSON::ParserError' do
+      stub_request(:get, 'http://json.test/').to_return(status: 204, body: '')
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://json.test'
+          config.json_response = true
+          config.timeout_seconds(total: 60)
+        end
+      end
+
+      expect(client.get('').body).to be_nil
+    end
   end
 
   describe '.raise_response_errors' do

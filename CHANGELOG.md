@@ -1,4 +1,5 @@
 # v2.2.0 2026-06-15
+- `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
 - Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.use_error_taxonomy = true` the client
   raises a typed subclass for an unhandled non-success response instead of returning it:
   - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
