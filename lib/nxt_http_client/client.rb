@@ -161,7 +161,7 @@ module NxtHttpClient
 
     def raise_mapped_error(response)
       error = self.class.error_class_for(response).new(response)
-      ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
+      ::Sentry.set_context('http_error', error.to_h) if defined?(::Sentry)
       raise error
     end
 
@@ -184,7 +184,7 @@ module NxtHttpClient
         response_handler.configure do |handler|
           handler.on(:error) do |response|
             error = NxtHttpClient::Error.new(response)
-            ::Sentry.set_extras(http_error_details: error.to_h) if defined?(::Sentry)
+            ::Sentry.set_context('http_error', error.to_h) if defined?(::Sentry)
             raise error
           end
         end

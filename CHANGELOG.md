@@ -1,4 +1,7 @@
 # v2.2.0 2026-06-15
+- Report HTTP error details to Sentry via the structured `set_context('http_error', …)` instead of the
+  deprecated `set_extras(http_error_details: …)`. (Typhoeus is not auto-instrumented by Sentry, so the gem
+  attaches this itself.)
 - `Error#to_h` now redacts the `Authorization` header and basic-auth `userpwd` (it is sent to Sentry).
 - `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
 - Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.raise_error_taxonomy = true` the client
