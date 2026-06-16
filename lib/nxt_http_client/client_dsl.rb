@@ -53,7 +53,7 @@ module NxtHttpClient
     end
 
     # Override the taxonomy's error class for a status, e.g. `map_error 422, MyService::ValidationFailed`.
-    # Only takes effect when config.use_error_taxonomy is enabled.
+    # Only takes effect when config.raise_error_taxonomy is enabled.
     def map_error(status, error_class)
       error_map[Integer(status)] = error_class
     end

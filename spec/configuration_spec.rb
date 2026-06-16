@@ -159,7 +159,7 @@ RSpec.describe NxtHttpClient::Client do
     end
   end
 
-  describe '.use_error_taxonomy' do
+  describe '.raise_error_taxonomy' do
     before do
       stub_request(:get, 'http://taxonomy.test/timeout').to_timeout
       stub_request(:get, 'http://taxonomy.test/status').to_return(status: response_status)
@@ -167,11 +167,11 @@ RSpec.describe NxtHttpClient::Client do
 
     let(:response_status) { 422 }
 
-    def build_client(use_error_taxonomy: true, &block)
+    def build_client(raise_error_taxonomy: true, &block)
       NxtHttpClient::Client.make do
         configure do |config|
           config.base_url = 'http://taxonomy.test'
-          config.use_error_taxonomy = use_error_taxonomy
+          config.raise_error_taxonomy = raise_error_taxonomy
           config.timeout_seconds(total: 60)
         end
 
@@ -205,7 +205,7 @@ RSpec.describe NxtHttpClient::Client do
     end
 
     it 'returns the response when opted out' do
-      expect(build_client(use_error_taxonomy: false).get('status').code).to eq(422)
+      expect(build_client(raise_error_taxonomy: false).get('status').code).to eq(422)
     end
 
     it 'does not clobber a consumer callback' do

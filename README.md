@@ -120,9 +120,9 @@ Register your default request options on the class level. Available options are:
 - `json_request=`: Shorthand to set the Content-Type request header to JSON and automatically convert request bodies to JSON
 - `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON (an empty/204 body becomes `nil`)
 - `raise_response_errors=`: Makes the client raise a generic `NxtHttpClient::Error` for a non-success response.
-  Superseded by `use_error_taxonomy` (which raises typed errors and takes precedence when both are set); kept for
+  Superseded by `raise_error_taxonomy` (which raises typed errors and takes precedence when both are set); kept for
   backward compatibility.
-- `use_error_taxonomy=`: Defaults to `false`. Opt in to raise the mapped `NxtHttpClient::Error` taxonomy
+- `raise_error_taxonomy=`: Defaults to `false`. Opt in to raise the mapped `NxtHttpClient::Error` taxonomy
   (`ClientError`/`ServerError`/`NetworkError` subclasses) on an unhandled 4xx/5xx/code-0 response instead of
   returning it. See [Error taxonomy](#error-taxonomy).
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
@@ -228,7 +228,7 @@ This is useful when setting a custom timeout value in your configuration.
 
 ### Error taxonomy
 
-Set `config.use_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for every
+Set `config.raise_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for every
 unhandled non-success response, so you no longer need to hand-roll per-status `on(400)`/`on(422)`/`on(5xx)`/`on(0)`
 handlers just to get a usable taxonomy. It is **off by default** (the client returns the response as before); all
 classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
@@ -281,11 +281,11 @@ fires when nothing else handled the response. So you can enable the taxonomy for
 
 Map a status to your own error class with `map_error` to get a domain error that parses the response body. It is
 inherited by subclasses and overrides the default for that status. `map_error` only takes effect when
-`use_error_taxonomy` is enabled — it customizes the taxonomy, it does not enable raising on its own:
+`raise_error_taxonomy` is enabled — it customizes the taxonomy, it does not enable raising on its own:
 
 ```ruby
 class MyService::Client < NxtHttpClient::Client
-  configure { |config| config.use_error_taxonomy = true }
+  configure { |config| config.raise_error_taxonomy = true }
   map_error 422, MyService::Error::ValidationFailed
 end
 

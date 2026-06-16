@@ -1,6 +1,6 @@
 # v2.2.0 2026-06-15
 - `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
-- Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.use_error_taxonomy = true` the client
+- Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.raise_error_taxonomy = true` the client
   raises a typed subclass for an unhandled non-success response instead of returning it:
   - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
     `NotFound` (404), `UnprocessableEntity` (422), `TooManyRequests` (429); `ServerError` (5xx).
@@ -10,7 +10,7 @@
   4xx, `CertificateError` and 429 are excluded (429 retry policy is left to consumers).
 - `map_error(status, klass)` DSL to override the mapping per client (e.g. a domain `ValidationFailed` that
   parses the body); inherited by subclasses.
-- `config.use_error_taxonomy` defaults to `false`, so the upgrade is backwards compatible — existing behavior
+- `config.raise_error_taxonomy` defaults to `false`, so the upgrade is backwards compatible — existing behavior
   (and `raise_response_errors`) is unchanged until you opt in. A consumer's own `on(<code>)`/`on(:error)`/
   `on(:timed_out)` callback always takes precedence over the taxonomy.
 

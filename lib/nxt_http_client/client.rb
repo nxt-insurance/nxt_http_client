@@ -153,7 +153,7 @@ module NxtHttpClient
 
     # Reached only when no consumer callback matched, so a consumer on(<code>)/on(:error) keeps precedence.
     def raise_mapped_error?(response)
-      return false unless config.use_error_taxonomy
+      return false unless config.raise_error_taxonomy
 
       code = response.code.to_i
       code.zero? || (400..599).cover?(code)
@@ -178,9 +178,9 @@ module NxtHttpClient
         end
       end
 
-      # Legacy generic-error raising. Superseded by use_error_taxonomy (typed), which takes precedence here
+      # Legacy generic-error raising. Superseded by raise_error_taxonomy (typed), which takes precedence here
       # via the callback_or_response fallback — so don't also register this shadowing on(:error) handler.
-      if config.raise_response_errors && !config.use_error_taxonomy
+      if config.raise_response_errors && !config.raise_error_taxonomy
         response_handler.configure do |handler|
           handler.on(:error) do |response|
             error = NxtHttpClient::Error.new(response)
