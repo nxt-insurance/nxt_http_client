@@ -6,6 +6,7 @@ module NxtHttpClient
     ].freeze
 
     REDACTED = '[REDACTED]'
+    SENSITIVE_HEADERS = %w[Authorization Proxy-Authorization].freeze
 
     def self.from_response(response, message = nil)
       error_class_for(response).new(response, message)
@@ -132,9 +133,13 @@ module NxtHttpClient
     end
 
     def redact_authorization(headers)
-      return headers unless headers.respond_to?(:key?) && headers.key?('Authorization')
+      return headers unless headers.respond_to?(:keys)
 
-      headers.merge('Authorization' => REDACTED)
+      # HTTP header names are case-insensitive, and HashWithIndifferentAccess does not normalize case.
+      sensitive = headers.keys.select { |key| SENSITIVE_HEADERS.any? { |name| key.to_s.casecmp?(name) } }
+      return headers if sensitive.empty?
+
+      headers.merge(sensitive.index_with { REDACTED })
     end
 
     public

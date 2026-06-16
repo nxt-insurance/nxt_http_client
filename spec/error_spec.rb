@@ -163,6 +163,12 @@ RSpec.describe NxtHttpClient::Error do
 
       expect(hash[:request_options]['userpwd']).to eq('[REDACTED]')
     end
+
+    it 'redacts a non-canonically-cased authorization header' do
+      hash = to_h_for { |config| config.request_options = { headers: { 'authorization' => 'Bearer secret' } } }
+
+      expect(hash[:request_headers]['authorization']).to eq('[REDACTED]')
+    end
   end
 
   describe '.from_response' do
