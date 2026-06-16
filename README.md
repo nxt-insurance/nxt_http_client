@@ -127,7 +127,7 @@ Register your default request options on the class level. Available options are:
   returning it. See [Error taxonomy](#error-taxonomy).
 - `bearer_auth=`: Set a bearer token to be sent in the Authorization header
 - `basic_auth=`: Pass a Hash containing `:username` and `:password`, to be sent as Basic credentials in the Authorization header
-- `timeouts(total:, connect: nil)`: Configure timeouts
+- `timeout_seconds(total:, connect: nil)`: Configure timeouts
 
 ### response_handler
 
@@ -228,10 +228,11 @@ This is useful when setting a custom timeout value in your configuration.
 
 ### Error taxonomy
 
-Set `config.raise_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for every
-unhandled non-success response, so you no longer need to hand-roll per-status `on(400)`/`on(422)`/`on(5xx)`/`on(0)`
-handlers just to get a usable taxonomy. It is **off by default** (the client returns the response as before); all
-classes inherit from `NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
+Set `config.raise_error_taxonomy = true` and the client raises a typed subclass of `NxtHttpClient::Error` for an
+unhandled 4xx, 5xx, or code-0 (network) response, so you no longer need to hand-roll per-status
+`on(400)`/`on(422)`/`on(5xx)`/`on(0)` handlers just to get a usable taxonomy. (3xx and other codes are returned
+as before.) It is **off by default** (the client returns the response); all classes inherit from
+`NxtHttpClient::Error`, so existing `rescue NxtHttpClient::Error` handlers keep working.
 
 **HTTP status:**
 

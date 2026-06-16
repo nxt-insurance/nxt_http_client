@@ -1,7 +1,7 @@
 # v2.2.0 2026-06-15
 - `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
 - Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.raise_error_taxonomy = true` the client
-  raises a typed subclass for an unhandled non-success response instead of returning it:
+  raises a typed subclass for an unhandled 4xx/5xx/code-0 response instead of returning it:
   - HTTP status: `ClientError` with `BadRequest` (400), `Unauthorized` (401), `Forbidden` (403),
     `NotFound` (404), `UnprocessableEntity` (422), `TooManyRequests` (429); `ServerError` (5xx).
   - Network (`return_code`-mapped code-0): `NetworkError` with `Timeout`, `ConnectionFailed`,

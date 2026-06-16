@@ -220,6 +220,11 @@ RSpec.describe NxtHttpClient::Client do
       expect { client.get('status') }.to raise_error(domain_error)
     end
 
+    it 'rejects a map_error class that is not a NxtHttpClient::Error' do
+      expect { Class.new(NxtHttpClient::Client) { map_error 422, String } }
+        .to raise_error(ArgumentError, /must be a subclass of NxtHttpClient::Error/)
+    end
+
     it 'takes precedence over the legacy raise_response_errors (typed, not generic)' do
       client = build_client { config.raise_response_errors = true }
 
