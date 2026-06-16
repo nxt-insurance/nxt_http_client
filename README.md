@@ -119,8 +119,9 @@ Register your default request options on the class level. Available options are:
 - `x_request_id_proc=`
 - `json_request=`: Shorthand to set the Content-Type request header to JSON and automatically convert request bodies to JSON
 - `json_response=`: Shorthand to set the Accept request header and automatically convert success response bodies to JSON (an empty/204 body becomes `nil`)
-- `raise_response_errors=`: Makes the client raise a `NxtHttpClient::Error` for a non-success response. 
-  You can also do this manually by setting a response_handler.
+- `raise_response_errors=`: Makes the client raise a generic `NxtHttpClient::Error` for a non-success response.
+  Superseded by `use_error_taxonomy` (which raises typed errors and takes precedence when both are set); kept for
+  backward compatibility.
 - `use_error_taxonomy=`: Defaults to `false`. Opt in to raise the mapped `NxtHttpClient::Error` taxonomy
   (`ClientError`/`ServerError`/`NetworkError` subclasses) on an unhandled 4xx/5xx/code-0 response instead of
   returning it. See [Error taxonomy](#error-taxonomy).

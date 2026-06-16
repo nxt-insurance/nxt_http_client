@@ -178,7 +178,9 @@ module NxtHttpClient
         end
       end
 
-      if config.raise_response_errors
+      # Legacy generic-error raising. Superseded by use_error_taxonomy (typed), which takes precedence here
+      # via the callback_or_response fallback — so don't also register this shadowing on(:error) handler.
+      if config.raise_response_errors && !config.use_error_taxonomy
         response_handler.configure do |handler|
           handler.on(:error) do |response|
             error = NxtHttpClient::Error.new(response)

@@ -219,6 +219,12 @@ RSpec.describe NxtHttpClient::Client do
 
       expect { client.get('status') }.to raise_error(domain_error)
     end
+
+    it 'takes precedence over the legacy raise_response_errors (typed, not generic)' do
+      client = build_client { config.raise_response_errors = true }
+
+      expect { client.get('status') }.to raise_error(NxtHttpClient::Error::UnprocessableEntity)
+    end
   end
 
   describe '.bearer_auth' do
