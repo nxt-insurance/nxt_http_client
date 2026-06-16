@@ -133,6 +133,38 @@ RSpec.describe NxtHttpClient::Error do
     end
   end
 
+  describe '#to_h credential redaction' do
+    before { stub_request(:get, 'http://creds.test/').to_return(status: 401) }
+
+    def to_h_for(&setup)
+      client = NxtHttpClient::Client.make do
+        configure do |config|
+          config.base_url = 'http://creds.test'
+          config.raise_error_taxonomy = true
+          config.timeout_seconds(total: 60)
+          setup.call(config)
+        end
+      end
+
+      client.get('')
+    rescue NxtHttpClient::Error => error
+      error.to_h
+    end
+
+    it 'redacts the bearer Authorization header' do
+      hash = to_h_for { |config| config.bearer_auth = 'super-secret-token' }
+
+      expect(hash[:request_headers]['Authorization']).to eq('[REDACTED]')
+      expect(hash[:request_options]['headers']['Authorization']).to eq('[REDACTED]')
+    end
+
+    it 'redacts the basic-auth userpwd' do
+      hash = to_h_for { |config| config.basic_auth = { username: 'user', password: 'pass' } }
+
+      expect(hash[:request_options]['userpwd']).to eq('[REDACTED]')
+    end
+  end
+
   describe '.from_response' do
     def network_response(return_code)
       Typhoeus::Response.new(code: 0, return_code: return_code, mock: true)

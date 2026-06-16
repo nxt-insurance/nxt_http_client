@@ -5,6 +5,8 @@ module NxtHttpClient
       peer_failed_verification ssl_certproblem ssl_cacert_badfile ssl_issuer_error ssl_crl_badfile
     ].freeze
 
+    REDACTED = '[REDACTED]'
+
     def self.from_response(response, message = nil)
       error_class_for(response).new(response, message)
     end
@@ -63,9 +65,9 @@ module NxtHttpClient
         id: id,
         url: url,
         response_code: response_code,
-        request_options: request_options,
+        request_options: redact_credentials(request_options),
         response_headers: response_headers,
-        request_headers: request_headers,
+        request_headers: redact_authorization(request_headers),
         body: body,
         x_request_id: x_request_id
       }
@@ -118,6 +120,24 @@ module NxtHttpClient
     def response_content_type
       response_headers['Content-Type']
     end
+
+    private
+
+    # Keep Authorization tokens / basic-auth creds out of serialized output (to_h reaches Sentry).
+    def redact_credentials(options)
+      options = options.merge('userpwd' => REDACTED) if options.key?('userpwd')
+      return options unless options['headers'].respond_to?(:key?)
+
+      options.merge('headers' => redact_authorization(options['headers']))
+    end
+
+    def redact_authorization(headers)
+      return headers unless headers.respond_to?(:key?) && headers.key?('Authorization')
+
+      headers.merge('Authorization' => REDACTED)
+    end
+
+    public
 
     class ClientError < self; end
     class BadRequest < ClientError; end           # 400

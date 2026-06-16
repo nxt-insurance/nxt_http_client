@@ -1,4 +1,5 @@
 # v2.2.0 2026-06-15
+- `Error#to_h` now redacts the `Authorization` header and basic-auth `userpwd` (it is sent to Sentry).
 - `json_response` now returns `nil` for an empty/204 body instead of raising `JSON::ParserError`.
 - Add an opt-in error taxonomy under `NxtHttpClient::Error`. With `config.raise_error_taxonomy = true` the client
   raises a typed subclass for an unhandled 4xx/5xx/code-0 response instead of returning it:
